@@ -191,9 +191,8 @@ def main():
          
     if choice == menu[1]:
         st.header(menu[1])
-        st.write("<h6 style='text-align: justify; color: Blue Jay;'>This app is dedicated to compute the cost-rate for a hybrid aperiodic inspection and age-based maintenance policy. We assume a single system operating under Delay-Time Modeling (DTM) with a heterogeneous component lifetime, each having distinct defect arrival distributions. Component renovation occurs either after a failure (corrective maintenance) or during inspections, once a defect is detected or if the age-based threshold is reached (preventive maintenance). We considered false-positive and false-negative probabilities during the inspection.</h6>", unsafe_allow_html=True)
-        st.write("<h6 style='text-align: justify; color: Blue Jay;'>The app computes the cost-rate for a specific solution—defined by the number of inspections (K), inspection moments (Δ) and the age-based threshold (T).</h6>", unsafe_allow_html=True)
-        st.write("<h6 style='text-align: justify; color: Blue Jay;'>For further questions or information on finding the optimal solution, please contact one of the email addresses below.</h6>", unsafe_allow_html=True)
+        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Este aplicativo é referente à aula...</h6>", unsafe_allow_html=True)
+        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Para mais informações, dúvidas e sugestões, por favor contacte nos e-mails abaixo:</h6>", unsafe_allow_html=True)
         
         st.write('''
 
