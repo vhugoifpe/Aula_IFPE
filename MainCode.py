@@ -134,21 +134,20 @@ def KD_KT(K,delta,T):
 def main():
     #criando 3 colunas
     col1, col2, col3= st.columns(3)
-    foto = Image.open('randomen.png')
+    foto = Image.open('IFPE.png')
     #st.sidebar.image("randomen.png", use_column_width=True)
     #inserindo na coluna 2
     col2.image(foto, use_column_width=True)
     #O código abaixo centraliza e atribui cor
-    st.markdown("<h2 style='text-align: center; color: #306754;'>HyPAIRS - Hybrid Policy of Aperiodic Inspections and Replacement System</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #306754;'>Aplicativo para...</h2>", unsafe_allow_html=True)
     
     st.markdown("""
         <div style="background-color: #F3F3F3; padding: 10px; text-align: center;">
-          <p style="font-size: 20px; font-weight: bold;">An aperiodic inspection and replacement policy based on the delay-time model with component-lifetime heterogeneity</p>
-          <p style="font-size: 15px;">By: Victor H. R. Lima, Rafael, G. N. Paiva, Augusto J. S. Rodrigues, Hanser S. J. González & Cristiano A. V. Cavalcante</p>
+          <p style="font-size: 15px;">By: Me. Victor Hugo Resende Lima</p>
         </div>
         """, unsafe_allow_html=True)
 
-    menu = ["Cost-rate", "Information", "Website"]
+    menu = ["Aplicativo", "Informações"]
     
     choice = st.sidebar.selectbox("Select here", menu)
     
@@ -198,24 +197,11 @@ def main():
         
         st.write('''
 
-v.h.r.lima@random.org.br
+victor.lima@ifpe.edu.br
 
-r.g.n.paiva@random.org.br
-
-a.j.s.rodrigues@random.org.br
-
-h.s.j.gonzalez@random.org.br
-
-c.a.v.cavalcante@random.org.br
+vhugoreslim@gmail.com
 
 ''' .format(chr(948), chr(948), chr(948), chr(948), chr(948)))       
-    if choice==menu[2]:
-        st.header(menu[2])
-        
-        st.write('''The Research Group on Risk and Decision Analysis in Operations and Maintenance was created in 2012 
-                 in order to bring together different researchers who work in the following areas: risk, maintenance a
-                 nd operation modelling. Learn more about it through our website.''')
-        st.markdown('[Click here to be redirected to our website](https://sites.ufpe.br/random/#page-top)',False)        
 if st._is_running_with_streamlit:
     main()
 else:
