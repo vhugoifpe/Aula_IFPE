@@ -139,7 +139,7 @@ def main():
     #inserindo na coluna 2
     col2.image(foto, use_column_width=True)
     #O código abaixo centraliza e atribui cor
-    st.markdown("<h2 style='text-align: center; color: #306754;'>Aplicativo para...</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #306754;'>Aplicativo referente à aula do dia 13/12/2025.</h2>", unsafe_allow_html=True)
     
     st.markdown("""
         <div style="background-color: #F3F3F3; padding: 10px; text-align: center;">
@@ -147,7 +147,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-    menu = ["Aplicativo", "Informações"]
+    menu = ["App_Estrat_Oper","App_Plan_Cap","App_Prev_Dem","App_Ges_Proj_Chicote","App_Ges_Proj_CPM_PERT","App_Ges_Qua", "Informações"]
     
     choice = st.sidebar.selectbox("Select here", menu)
     
