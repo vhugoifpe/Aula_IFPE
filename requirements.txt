@@ -4,3 +4,5 @@ streamlit==1.5.0
 click==8.0
 protobuf==3.20.*
 altair==4.2.0
+matplotlib==3.8.4
+scikit-learn==1.4.2
