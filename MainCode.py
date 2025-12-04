@@ -212,21 +212,31 @@ def main():
 
             st.title("📋 Opções de Expansão de Capacidade")
 
-            # Criar o DataFrame com os dados
-            df_opcoes = pd.DataFrame({
-                'Opção': ['Turno extra', 'Nova máquina', 'Automação', 'Terceirização'],
-                'Custo fixo': ['R$ 120.000/mês', 'R$ 900.000', 'R$ 1.500.000', 'sem custo fixo'],
-                'Custo variável': ['↑ 15% mão de obra', '+R$ 0,30/unidade', 'reduz 20% MO', 'R$ 4/unidade'],
-                'Impacto': ['+25% capacidade', '+40% capacidade', '+20% capacidade + +10% eficiência', 'capacidade ilimitada'],
-                'Tempo de implantação': ['imediato', '6 meses', '1 ano', 'imediato']
-            })
+            st.markdown("""
+            ### 🏭 **Turno extra**
+            - **Custo fixo:** R$ 120.000/mês
+            - **Custo variável:** ↑ 15% mão de obra
+            - **Impacto:** +25% capacidade
+            - **Tempo de implantação:** imediato
             
-            # Mostrar como tabela formatada
-            st.dataframe(
-                df_opcoes,
-                use_container_width=True,
-                hide_index=True
-            )
+            ### 🏗️ **Nova máquina**
+            - **Custo fixo:** R$ 900.000
+            - **Custo variável:** +R$ 0,30/unidade
+            - **Impacto:** +40% capacidade
+            - **Tempo de implantação:** 6 meses
+            
+            ### 🤖 **Automação**
+            - **Custo fixo:** R$ 1.500.000
+            - **Custo variável:** reduz 20% MO
+            - **Impacto:** +20% capacidade + +10% eficiência
+            - **Tempo de implantação:** 1 ano
+            
+            ### 📦 **Terceirização**
+            - **Custo fixo:** sem custo fixo
+            - **Custo variável:** R$ 4/unidade
+            - **Impacto:** capacidade ilimitada
+            - **Tempo de implantação:** imediato
+            """)
         
         
     if choice == menu[6]:
