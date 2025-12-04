@@ -327,154 +327,92 @@ def main():
 #################################################################################################################################################################################
         else:    
             if choice == menu[2]:
-                data = """
-                        date,store_nbr,item_nbr,sales
-                        2017-01-01,1,101,12
-                        2017-01-02,1,101,18
-                        2017-01-03,1,101,17
-                        2017-01-04,1,101,19
-                        2017-01-05,1,101,22
-                        2017-01-06,1,101,20
-                        2017-01-07,1,101,15
-                        2017-01-08,1,101,13
-                        2017-01-09,1,101,21
-                        2017-01-10,1,101,23
-                        2017-01-11,1,101,25
-                        2017-01-12,1,101,26
-                        2017-01-13,1,101,28
-                        2017-01-14,1,101,18
-                        2017-01-15,1,101,16
-                        2017-01-16,1,101,24
-                        2017-01-17,1,101,27
-                        2017-01-18,1,101,30
-                        2017-01-19,1,101,31
-                        2017-01-20,1,101,29
-                        2017-01-21,1,101,20
-                        2017-01-22,1,101,18
-                        2017-01-23,1,101,28
-                        2017-01-24,1,101,32
-                        2017-01-25,1,101,33
-                        2017-01-26,1,101,34
-                        2017-01-27,1,101,35
-                        2017-01-28,1,101,21
-                        2017-01-29,1,101,19
-                        2017-01-30,1,101,30
-                        2017-01-31,1,101,33
-                        2017-02-01,1,101,34
-                        2017-02-02,1,101,36
-                        2017-02-03,1,101,37
-                        2017-02-04,1,101,23
-                        2017-02-05,1,101,20
-                        2017-02-06,1,101,31
-                        2017-02-07,1,101,35
-                        2017-02-08,1,101,40
-                        2017-02-09,1,101,41
-                        2017-02-10,1,101,44
-                        2017-02-11,1,101,26
-                        2017-02-12,1,101,23
-                        2017-02-13,1,101,33
-                        2017-02-14,1,101,50
-                        2017-02-15,1,101,48
-                        2017-02-16,1,101,46
-                        2017-02-17,1,101,47
-                        2017-02-18,1,101,30
-                        2017-02-19,1,101,25
-                        2017-02-20,1,101,37
-                        2017-02-21,1,101,39
-                        2017-02-22,1,101,42
-                        2017-02-23,1,101,44
-                        2017-02-24,1,101,45
-                        2017-02-25,1,101,27
-                        2017-02-26,1,101,26
-                        2017-02-27,1,101,40
-                        2017-02-28,1,101,43
-                        2017-03-01,1,101,45
-                        2017-03-02,1,101,48
-                        2017-03-03,1,101,51
-                        2017-03-04,1,101,28
-                        2017-03-05,1,101,25
-                        2017-03-06,1,101,38
-                        2017-03-07,1,101,42
-                        2017-03-08,1,101,45
-                        2017-03-09,1,101,47
-                        2017-03-10,1,101,52
-                        2017-03-11,1,101,30
-                        2017-03-12,1,101,27
-                        2017-03-13,1,101,40
-                        2017-03-14,1,101,43
-                        2017-03-15,1,101,46
-                        2017-03-16,1,101,49
-                        2017-03-17,1,101,53
-                        2017-03-18,1,101,31
-                        2017-03-19,1,101,29
-                        2017-03-20,1,101,42
-                        2017-03-21,1,101,45
-                        2017-03-22,1,101,48
-                        2017-03-23,1,101,50
-                        2017-03-24,1,101,52
-                        2017-03-25,1,101,32
-                        2017-03-26,1,101,30
-                        2017-03-27,1,101,44
-                        2017-03-28,1,101,47
-                        2017-03-29,1,101,49
-                        2017-03-30,1,101,51
-                        2017-03-31,1,101,54
-                        """
-                df = pd.read_csv(StringIO(data), parse_dates=["date"])
+                data = [[0, 12], [1, 18], [2, 17], [3, 19], [4, 22], [5, 20], [6, 15], [7, 13], [8, 21], [9, 23], [10, 25], [11, 26], [12, 28], [13, 18], [14, 16], [15, 24], [16, 27], [17, 30], [18, 31], [19, 29],
+                    [20, 20], [21, 18], [22, 28], [23, 32], [24, 33], [25, 34], [26, 35], [27, 21], [28, 19], [29, 30], [30, 33], [31, 34], [32, 36], [33, 37], [34, 23], [35, 20], [36, 31], [37, 35], [38, 40], [39, 41],
+                    [40, 44], [41, 26], [42, 23], [43, 33], [44, 50], [45, 48], [46, 46], [47, 47], [48, 30], [49, 25], [50, 37], [51, 39], [52, 42], [53, 44], [54, 45], [55, 27], [56, 26], [57, 40], [58, 43], [59, 45],
+                    [60, 48], [61, 51], [62, 28], [63, 25], [64, 38], [65, 42], [66, 45], [67, 47], [68, 52], [69, 30], [70, 27], [71, 40], [72, 43], [73, 46], [74, 49], [75, 53], [76, 31], [77, 29], [78, 42], [79, 45],
+                    [80, 48], [81, 50], [82, 52], [83, 32], [84, 30], [85, 44], [86, 47], [87, 49], [88, 51], [89, 54]]
                 
-                st.dataframe(df.head())
+                df = pd.DataFrame(data, columns=["date", "sales"])
                 df["date"] = pd.to_datetime(df["date"])
                 
-                st.subheader("⚙️ Modelo de Previsão Utilizado")
-                
-                df["forecast"] = df["sales"].rolling(3).mean().fillna(method="bfill")
-                df["error"] = df["sales"] - df["forecast"]
-                df["abs_error"] = df["error"].abs()
-                st.code("df['forecast'] = df['sales'].rolling(3).mean()")
-                
-                st.subheader("📈 1. Série Temporal — Observado vs Previsto")
+                st.subheader("📊 Série Temporal de Vendas")
                 
                 plt.figure(figsize=(8,4))
-                plt.plot(df["date"], df["sales"], label="Vendas Observadas")
-                plt.plot(df["date"], df["forecast"], label="Previsão", linestyle="--")
+                plt.plot(df["date"], df["sales"])
                 plt.xlabel("Data")
                 plt.ylabel("Vendas")
-                plt.legend()
+                plt.title("Série Temporal")
                 st.pyplot()
                 
-                st.subheader("📊 2. Erro Absoluto ao longo do tempo")
+                st.subheader("⚙️ Seleção do Modelo de Previsão")
+                
+                modelo = st.selectbox(
+                    "Escolha o modelo:",
+                    ["Média Móvel", "Ingênuo (Naive)", "Sazonal Ingênuo"]
+                )
+                
+                if modelo == "Média Móvel":
+                    janela = st.slider("Escolha a janela da média móvel:", 2, 30, 7)
+                
+                elif modelo == "Sazonal Ingênuo":
+                    sazonalidade = st.slider("Período sazonal:", 2, 60, 7)
+                
+                st.subheader("🛠 Período de treino")
+                
+                train_pct = st.slider(
+                    "Percentual de dados para treino:",
+                    min_value=50, max_value=95, value=80
+                )
+                
+                train_size = int(len(df) * train_pct / 100)
+                
+                df_train = df.iloc[:train_size].copy()
+                df_test  = df.iloc[train_size:].copy()
+                
+                st.write(f"📌 Treino: {len(df_train)} pontos | Teste: {len(df_test)} pontos")
+                
+                if modelo == "Média Móvel":
+                    df_train["forecast"] = df_train["sales"].rolling(janela).mean().fillna(method="bfill")
+                
+                    last_values = df_train["sales"].iloc[-janela:]
+                    test_forecasts = []
+                    history = list(last_values)
+                
+                    for _ in range(len(df_test)):
+                        test_forecasts.append(np.mean(history[-janela:]))
+                        history.append(df_test["sales"].iloc[_])
+                
+                elif modelo == "Ingênuo (Naive)":
+                    df_train["forecast"] = df_train["sales"].shift(1).fillna(method="bfill")
+                    last_value = df_train["sales"].iloc[-1]
+                    test_forecasts = [last_value] * len(df_test)
+                
+                elif modelo == "Sazonal Ingênuo":
+                    df_train["forecast"] = df_train["sales"].shift(sazonalidade).fillna(method="bfill")
+                    test_forecasts = list(df_train["sales"].iloc[-sazonalidade:]) * (len(df_test) // sazonalidade + 1)
+                    test_forecasts = test_forecasts[:len(df_test)]
+                
+                df_test["forecast"] = test_forecasts
+                df_all = pd.concat([df_train, df_test])
+                st.subheader("📈 Observado vs Previsto")
                 
                 plt.figure(figsize=(8,4))
-                plt.bar(df["date"], df["abs_error"])
+                plt.plot(df_all["date"], df_all["sales"], label="Observado")
+                plt.plot(df_all["date"], df_all["forecast"], label="Previsto", linestyle="--")
+                plt.axvline(df_train["date"].iloc[-1], color="gray", linestyle=":", label="Divisão treino/teste")
+                plt.legend()
                 plt.xlabel("Data")
-                plt.ylabel("Erro Absoluto")
+                plt.ylabel("Vendas")
                 st.pyplot()
                 
-                st.subheader("📉 3. Distribuição do Erro")
+                st.subheader("📌 Métricas de Desempenho (Teste)")
+                error = df_test["sales"] - df_test["forecast"]
+                abs_error = error.abs()
                 
-                plt.figure(figsize=(6,4))
-                plt.hist(df["error"], bins=8, edgecolor="black")
-                plt.xlabel("Erro")
-                plt.ylabel("Frequência")
-                st.pyplot()
-                
-                st.subheader("🔥 4. Heatmap de Correlações")
-                
-                corr = df[["sales", "forecast", "error", "abs_error"]].corr()
-                
-                plt.figure(figsize=(4,3))
-                plt.imshow(corr, cmap="coolwarm", interpolation="nearest")
-                plt.xticks(range(len(corr)), corr.columns, rotation=45)
-                plt.yticks(range(len(corr)), corr.columns)
-                plt.colorbar()
-                st.pyplot()
-                
-                st.subheader("📌 5. Métricas Gerais do Modelo")
-                
-                mae = df["abs_error"].mean()
-                mse = (df["error"]**2).mean()
-                rmse = np.sqrt(mse)
-                mape = (df["abs_error"] / df["sales"]).mean() * 100
+                mae = abs_error.mean()
+                rmse = np.sqrt((error**2).mean())
+                mape = (abs_error / df_test["sales"]).mean() * 100
                 
                 metrics = pd.DataFrame({
                     "MAE": [mae],
@@ -483,6 +421,24 @@ def main():
                 })
                 
                 st.dataframe(metrics.style.format("{:.2f}"))
+                
+                st.subheader("📉 Erro Absoluto ao longo do tempo")
+                
+                plt.figure(figsize=(8,4))
+                plt.bar(df_test["date"], abs_error)
+                plt.xlabel("Data")
+                plt.ylabel("Erro Absoluto")
+                st.pyplot()
+                
+                st.subheader("📊 Distribuição do Erro")
+                
+                plt.figure(figsize=(6,4))
+                plt.hist(error, bins=10, edgecolor="black")
+                plt.xlabel("Erro")
+                plt.ylabel("Frequência")
+                st.pyplot()
+                
+                st.success("Modelo avaliado com sucesso!")
             #####################################################################################################################################################################
             #####################################################################################################################################################################
             #####################################################################################################################################################################
