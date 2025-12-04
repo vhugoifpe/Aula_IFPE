@@ -242,7 +242,7 @@ def main():
         # Dicionário para armazenar as decisões
         decisoes_anuais = {}
         
-        for ano in anos:
+        for ano in Anos:
             st.markdown(f"### 🗓️ Início de {ano}")
             
             col1, col2 = st.columns([2, 1])
