@@ -75,7 +75,8 @@ def main():
                 ) 
     if choice == menu[1]:
         st.header(menu[1])
-        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Este aplicativo é referente à aula...</h6>", unsafe_allow_html=True)
+        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Este aplicativo é referente à aula do dia 13/12/2025, sobre o tema Planejamento Estratégico da Produção: Estratégia de Operações, Objetivos e Papéis Estratégicos, Avaliação da Importância e Desempenho dos Critérios Competitivos</h6>", unsafe_allow_html=True)
+        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Nele, o usuário pode comparar a sua estratégia frente à concorrência, dando maior ou menor peso a cada critério. Indica-se que a atribuição de pesos a cada um dos critérios competitivos deve ser feita por uma pessoa diferente que conhece o ambiente competitivo a qual está inserido o usuário. Assim, a aplicação traz mais um grau de realidade.</h6>", unsafe_allow_html=True)
         st.write("<h6 style='text-align: justify; color: Blue Jay;'>Para mais informações, dúvidas e sugestões, por favor contacte nos e-mails abaixo:</h6>", unsafe_allow_html=True)
         
         st.write('''
