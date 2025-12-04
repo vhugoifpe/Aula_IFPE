@@ -155,12 +155,12 @@ def main():
     else:
         if choice == menu[1]:
             st.subheader("Indique o cenário atual da sua empresa:")
-            Capacidade=st.number_input("Capacidade (unid/mês)", value=40000,help="Selecione o nível de capacidade da sua empresa.")
+            Capacidade=st.number_input("Capacidade (unid/mês)", value=100,help="Selecione o nível de capacidade da sua empresa.")
             Eficiencia=st.number_input("Eficiência (%)", value=80,help="Selecione o nível de eficiência da sua empresa.")/100
             Penalidade=st.number_input("Custo de penalidade por unidade não atendida (R$/unid)", value=7.5,help="Selecione o custo de penlidade.")
             preco_venda = st.number_input("Preço de venda por unidade (R$)", min_value=0.0, value=25.0, step=0.5, help="Preço que você vende cada unidade")
             custo_variavel_base = st.number_input("Custo variável base por unidade (R$)", min_value=0.0, value=8.0, step=0.5, help="Custo variável atual por unidade produzida")
-            custo_fixo_mensal = st.number_input("Custo fixo mensal atual (R$/mês)", min_value=0.0, value=50000.0, step=1000.0, help="Custos fixos mensais atuais")
+            custo_fixo_mensal = st.number_input("Custo fixo mensal atual (R$/mês)", min_value=0.0, value=500.0, step=10.0, help="Custos fixos mensais atuais")
             Anos = [2025, 2026, 2027, 2028]
             valores_padrao = [1000, 800, 900, 1000]
             Demandas = []
