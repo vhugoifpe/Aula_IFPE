@@ -162,7 +162,7 @@ def main():
             custo_variavel_base = st.number_input("Custo variável base por unidade (R$)", min_value=0.0, value=8.0, step=0.5, help="Custo variável atual por unidade produzida")
             custo_fixo_mensal = st.number_input("Custo fixo mensal atual (R$/mês)", min_value=0.0, value=50000.0, step=1000.0, help="Custos fixos mensais atuais")
             Anos = [2025, 2026, 2027, 2028, 2029]
-            Demandas=st.number_input("Demanda esperada no ano de 2025",value=1000)
+            Demandas=[st.number_input("Demanda esperada no ano de 2025",value=1000)]
             Demandas.append(st.number_input("Demanda esperada no ano de 2026",value=800))
             Demandas.append(st.number_input("Demanda esperada no ano de 2027",value=900))
             Demandas.append(st.number_input("Demanda esperada no ano de 2028",value=1000))
