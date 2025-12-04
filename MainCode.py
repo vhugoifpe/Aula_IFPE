@@ -422,8 +422,8 @@ def main():
                 st.subheader("📈 Observado vs Previsto")
                 
                 plt.figure(figsize=(10,4))
-                plt.plot(df_all["date"], df_all["sales"], label="Observado", marker='o', linewidth=1)
-                plt.plot(df_all["date"], df_all["forecast"], label="Previsto", linestyle="--", marker='x')
+                plt.plot(df_all["date"], df_all["sales"], label="Observado", linewidth=1)
+                plt.plot(df_all["date"], df_all["forecast"], label="Previsto", linestyle="--")
                 split_date = df_train["date"].iloc[-1]
                 plt.axvline(split_date, color='gray', linestyle=':', label='Divisão treino/teste')
                 plt.xlabel("Data")
