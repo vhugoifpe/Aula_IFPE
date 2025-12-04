@@ -269,17 +269,17 @@ def main():
                     'acao': acao_selecionada,
                     'detalhes': opcoes[acao_selecionada]
                 }
-                        
+            #######Simulação####################################################       
             capacidade_atual = Capacidade  
             eficiencia_atual = Eficiencia
             custo_variavel_atual = custo_variavel_base 
             custo_fixo_atual = custo_fixo_mensal 
             
             investimentos_pendentes = {}
-            resultados = []
             lucro_acumulado = 0
             fluxo_caixa_anual = []
-            for i, ano in enumerate(Anos):
+            for i, ano in range(0,len(Anos),1):
+                st.write(i)
                 decisao = decisoes_anuais[ano]
                 detalhes = decisao['detalhes']
                 
