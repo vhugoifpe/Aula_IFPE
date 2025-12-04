@@ -162,35 +162,9 @@ def main():
             custo_variavel_base = st.number_input("Custo variável base por unidade (R$)", min_value=0.0, value=8.0, step=0.5, help="Custo variável atual por unidade produzida")
             custo_fixo_mensal = st.number_input("Custo fixo mensal atual (R$/mês)", min_value=0.0, value=50000.0, step=1000.0, help="Custos fixos mensais atuais")
             Anos = [2025, 2026, 2027, 2028, 2029]
-            Demandas = {}
+            Demandas =[]
             for ano in Anos:
-                col1, col2 = st.columns(2)
-                with col1:
-                    media = st.number_input(
-                        f"Média - {ano}",
-                        min_value=0,
-                        max_value=1000000,
-                        value=1000,
-                        step=100,
-                        help=f"Demanda média esperada para {ano}",
-                        key=f"media_{ano}"
-                    )
-                with col2:
-                    erro = st.number_input(
-                        f"Erro/Margem - {ano}",
-                        min_value=0,
-                        max_value=100000,
-                        value=100,
-                        step=10,
-                        help=f"Margem de erro para {ano} (±)",
-                        key=f"erro_{ano}"
-                    )
-                Demandas[ano-2025] = {
-                    'media': media,
-                    'erro': erro,
-                    'min': max(0, media - erro),  # Não pode ser negativo
-                    'max': media + erro
-                }
+                Demandas.append(st.number_input("Demanda esperada no ano de,"str(ano)))
             st.title("📋 Opções de Expansão de Capacidade")
             st.markdown("""
             ### 🏭 **Turno extra**
@@ -268,15 +242,13 @@ def main():
                     'acao': acao_selecionada,
                     'detalhes': opcoes[acao_selecionada]
                 }
-                
+            ###########Simular######################################################################
             capacidade_atual = Capacidade 
             eficiencia_atual = Eficiencia
             custo_variavel_atual = custo_variavel_base 
             custo_fixo_atual = custo_fixo_mensal 
-            
             investimentos_pendentes = {}
             lucro_acumulado = 0
-            fluxo_caixa_anual = []
             for i, ano in enumerate(Anos):
                 decisao = decisoes_anuais[ano]
                 detalhes = decisao['detalhes']
@@ -297,16 +269,11 @@ def main():
                         custo_fixo_atual += detalhes['custo_fixo']  # +R$120.000/mês
                         custo_variavel_atual *= (1 + detalhes['custo_variavel'])  # +15%
                         capacidade_atual *= (1 + detalhes['impacto_capacidade'])  # +25%
-                    elif decisao['acao'] == "Terceirização":
-                        pass  # Será tratado no cálculo de produção
-                    elif decisao['acao'] == "Nada":
-                        pass  # Nenhuma alteração
                     elif decisao['acao'] in ["Nova máquina", "Automação"]:
                         mes_implantacao = ano + (detalhes['tempo'] / 12)
                         investimentos_pendentes[mes_implantacao] = {
                             'tipo': decisao['acao'],
-                            'custo': detalhes['custo_fixo']
-                        }
+                            'custo': detalhes['custo_fixo']}
                 capacidade_anual_efetiva = capacidade_atual * 12 * eficiencia_atual
                 if decisao['acao'] == "Terceirização":
                     capacidade_anual_efetiva = float('inf')
