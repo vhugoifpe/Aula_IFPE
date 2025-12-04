@@ -295,7 +295,6 @@ def main():
             
             decisoes_anuais[ano] = {
                 'acao': acao_selecionada,
-                'observacao': observacao,
                 'detalhes': opcoes[acao_selecionada]
             }
             
