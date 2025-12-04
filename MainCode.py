@@ -38,7 +38,40 @@ def main():
         Cap=st.selectbox("Capacidade", options= ["No Limite","Próxima ao Limite","Com Folga"], help="Selecione a que nível de capacidade se encontra a linha do produto da sua empresa.")
         Prev=st.selectbox("Previsão de Demanda", options= ["Pouco Precisa","Erros Aceitáveis","Precisa"], help="Selecione o nível de previsão de demanda do produto da sua empresa.")
         
-        col1, col2 = st.columns(2)
+        critérios = {
+        'Custo': "Nível de custo da concorrência",
+        'Qualidade': "Nível de qualidade da concorrência",
+        'Flexibilidade': "Nível de flexibilidade da concorrência",
+        'Entrega': "Nível de entrega da concorrência",
+        'Inovação Tecnológica': "Nível de inovação da concorrência",
+        'Capacidade': "Nível de capacidade da concorrência",
+        'Previsão de Demanda': "Nível de previsão da concorrência"
+    }
+    
+    cenario = {}
+    
+    for criterio, help_text in critérios.items():
+        with st.expander(f"⚙️ {criterio}", expanded=False):
+            col1, col2 = st.columns(2)
+            with col1:
+                media = st.slider(
+                    f"Média",
+                    min_value=0.0,
+                    max_value=1.0,
+                    value=0.5,
+                    step=0.01,
+                    help=f"{help_text} - Média"
+                )
+            with col2:
+                desvio_padrao = st.slider(
+                    f"Desvio-padrão",
+                    min_value=0.0,
+                    max_value=0.5,
+                    value=0.1,
+                    step=0.01,
+                    help=f"{help_text} - Desvio-padrão"
+                )
+        
         
         Delta=[0]
         st.subheader("Insert the variable values below:")
