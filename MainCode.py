@@ -169,7 +169,48 @@ def main():
             st.metric("Score da Empresa", f"{score_empresa:.3f}")
         with colB:
             st.metric("Score da Concorrência", f"{score_concorrencia:.3f}")
-                
+
+    if choice == menu[1]:
+        st.subheader("Indique o cenário atual da sua empresa:")
+        
+        Capacidade=st.number_input("Capacidade (unid/mês)", help="Selecione o nível de capacidade da sua empresa.")
+        Eficiencia=st.number_input("Eficiência (%)", help="Selecione o nível de eficiência da sua empresa.")
+        Penalidade=st.number_input("Custo de penalidade por unidade não atendida (R$/unid)", help="Selecione o custo de penlidade.")
+        Anos = [2024, 2025, 2026, 2027, 2028]
+        Demandas = {}
+        for ano in anos:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                media = st.number_input(
+                    f"Média - {ano}",
+                    min_value=0,
+                    max_value=1000000,
+                    value=1000,
+                    step=100,
+                    help=f"Demanda média esperada para {ano}",
+                    key=f"media_{ano}"
+                )
+            
+            with col2:
+                erro = st.number_input(
+                    f"Erro/Margem - {ano}",
+                    min_value=0,
+                    max_value=100000,
+                    value=100,
+                    step=10,
+                    help=f"Margem de erro para {ano} (±)",
+                    key=f"erro_{ano}"
+                )
+            
+            demandas[ano] = {
+                'media': media,
+                'erro': erro,
+                'min': max(0, media - erro),  # Não pode ser negativo
+                'max': media + erro
+            }
+        
+        
     if choice == menu[6]:
         st.header(menu[6])
         st.write("<h6 style='text-align: justify; color: Blue Jay;'>Estes aplicativos são referente à aula do dia 13/12/2025.</h6>", unsafe_allow_html=True)
