@@ -245,7 +245,8 @@ def main():
                     'detalhes': opcoes[acao_selecionada]
                 }
             ###########Simular######################################################################
-            def Sim(Capacidade,Eficiencia,custo_variavel_base_custo_fixo_mensal,decisores_anuais,preco_venda,Penalidade,Demandas):
+            def Sim():
+                global Capacidade,Eficiencia,custo_variavel_base_custo_fixo_mensal,decisores_anuais,preco_venda,Penalidade,Demandas 
                 capacidade_atual = Capacidade 
                 eficiencia_atual = Eficiencia
                 custo_variavel_atual = custo_variavel_base 
