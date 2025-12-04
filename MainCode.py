@@ -239,32 +239,60 @@ def main():
         """)
         st.subheader("Planeje as ações para cada início de ano:")
 
+        opcoes = {
+            "Nada": {
+                "descricao": "Manter operação atual",
+                "custo_fixo": "R$ 0",
+                "custo_variavel": "sem alteração",
+                "impacto": "sem alteração",
+                "tempo": "imediato"
+            },
+            "Turno extra": {
+                "descricao": "Contratar turno extra de produção",
+                "custo_fixo": "R$ 120.000/mês",
+                "custo_variavel": "↑ 15% mão de obra",
+                "impacto": "+25% capacidade",
+                "tempo": "imediato"
+            },
+            "Nova máquina": {
+                "descricao": "Adquirir nova máquina",
+                "custo_fixo": "R$ 900.000",
+                "custo_variavel": "+R$ 0,30/unidade",
+                "impacto": "+40% capacidade",
+                "tempo": "6 meses"
+            },
+            "Automação": {
+                "descricao": "Implementar automação industrial",
+                "custo_fixo": "R$ 1.500.000",
+                "custo_variavel": "reduz 20% MO",
+                "impacto": "+20% capacidade + +10% eficiência",
+                "tempo": "1 ano"
+            },
+            "Terceirização": {
+                "descricao": "Terceirizar parte da produção",
+                "custo_fixo": "sem custo fixo",
+                "custo_variavel": "R$ 4/unidade",
+                "impacto": "capacidade ilimitada",
+                "tempo": "imediato"
+            }
+        }
+
+
         # Dicionário para armazenar as decisões
         decisoes_anuais = {}
         
         for ano in Anos:
             st.markdown(f"### 🗓️ Início de {ano}")
             
-            col1, col2 = st.columns([2, 1])
+            # Selectbox para escolher a ação
+            acao_selecionada = st.selectbox(
+                f"O que fazer em {ano}?",
+                options=list(opcoes.keys()),
+                index=0,  # "Nada" por padrão
+                key=f"acao_{ano}",
+                help=f"Escolha a ação a ser implementada no início de {ano}"
+            )
             
-            with col1:
-                # Selectbox para escolher a ação
-                acao_selecionada = st.selectbox(
-                    f"O que fazer em {ano}?",
-                    options=list(opcoes.keys()),
-                    index=0,  # "Nada" por padrão
-                    key=f"acao_{ano}",
-                    help=f"Escolha a ação a ser implementada no início de {ano}"
-                )
-            
-            with col2:
-                # Mostrar detalhes da opção selecionada
-                if acao_selecionada != "Nada":
-                    st.info(f"**{acao_selecionada}**")
-                    st.caption(f"Tempo: {opcoes[acao_selecionada]['tempo']}")
-                else:
-                    st.info("**Manter operação atual**")
-            # Armazenar a decisão
             decisoes_anuais[ano] = {
                 'acao': acao_selecionada,
                 'observacao': observacao,
