@@ -304,7 +304,8 @@ def main():
                                     
             st.header("📊 Resultados da Simulação")
             if st.button("Simular"):
-                st.write(str(Sim(Capacidade,Eficiencia,custo_variavel_base_custo_fixo_mensal,decisores_anuais,preco_venda,Penalidade,Demandas)))
+                A=Sim(Capacidade,Eficiencia,custo_variavel_base_custo_fixo_mensal,decisores_anuais,preco_venda,Penalidade,Demandas)
+                st.write(str())
 #################################################################################################################################################################################
 #################################################################################################################################################################################
 #################################################################################################################################################################################
