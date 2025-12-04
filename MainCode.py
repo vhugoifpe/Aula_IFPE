@@ -203,7 +203,7 @@ def main():
                     key=f"erro_{ano}"
                 )
             
-            demandas[ano] = {
+            demandas[ano-2024] = {
                 'media': media,
                 'erro': erro,
                 'min': max(0, media - erro),  # Não pode ser negativo
