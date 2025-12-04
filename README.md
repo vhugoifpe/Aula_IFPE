@@ -1,1 +1,1 @@
-Este repositório contém todos os arquivos referentes à aula do dia 13/12/2025. Os arquivos "MainCode", "requirements" e "IFPE" **não devem ser modificados** e são relativos à criação do app. Aqui constam: os slides da aula, a lista de exercícios, o mapa mental da aula, e o arquivo executável do aplicativo.
+Este repositório contém todos os arquivos referentes à aula do dia 13/12/2025. Os arquivos "MainCode", "requirements" e "IFPE" são relativos à criação do app. Aqui constam: os slides da aula, a lista de exercícios, o mapa mental da aula, e o código fonte do aplicativo.
