@@ -24,11 +24,13 @@ def main():
     menu = ["Estratégia de Operações","Planejamento de Capacidade","Previsão de Demanda","Gestão de Projetos","Gestão da Qualidade", "Informações"]
     
     choice = st.sidebar.selectbox("Select here", menu)
-    
+
+    #################################################################################################################################################################################
+    #################################################################################################################################################################################
+    #################################################################################################################################################################################
     if choice == menu[0]:
         st.header(menu[0])
         st.subheader("Indique o cenário inicial da sua empresa:")
-        
         Custo=st.selectbox("Custo", options= ["Baixo","Baixo/Médio","Médio","Médio/Alto","Alto"], help="Selecione o nível de custo da sua empresa.")
         Qual=st.selectbox("Qualidade", options= ["Baixa","Média","Alta"], help="Selecione o nível de qualidade do produto da sua empresa.")
         Flex=st.selectbox("Flexibilidade", options= ["Baixa","Média","Alta"], help="Selecione o nível de flexibilidade do produto da sua empresa.")
@@ -36,9 +38,7 @@ def main():
         Inov=st.selectbox("Inovação Tecnológica",options= ["Tradicional","Média","Inovativa"], help="Selecione o nível de inovação do produto da sua empresa.")
         Cap=st.selectbox("Capacidade", options= ["No Limite","Próxima ao Limite","Com Folga"], help="Selecione a que nível de capacidade se encontra a linha do produto da sua empresa.")
         Prev=st.selectbox("Previsão de Demanda", options= ["Pouco Precisa","Erros Aceitáveis","Precisa"], help="Selecione o nível de previsão de demanda do produto da sua empresa.")
-
         st.subheader("Indique o cenário da concorrência em relação à sua empresa, onde os extremos significam que não há concorrência e que quão maior, melhor a concorrência está:")
-        
         critérios = {
         'Custo': "Nível de custo da concorrência",
         'Qualidade': "Nível de qualidade da concorrência",
@@ -50,10 +50,8 @@ def main():
         }
         
         cenario = {}
-    
         medias=[]
         dev=[]
-        
         for criterio, help_text in critérios.items():
             with st.expander(f"⚙️ {criterio}", expanded=False):
                 col1, col2 = st.columns(2)
@@ -78,7 +76,6 @@ def main():
             medias.append(media)
             dev.append(desvio_padrao)
         st.subheader("Defina os pesos dos critérios competitivos (Total deve somar 100%)")
-    
         criterios = {
             "Custo": "Importância do custo na competitividade",
             "Qualidade": "Importância da qualidade na competitividade",
@@ -91,7 +88,6 @@ def main():
         
         pesos = {}
         total = 0
-        
         st.markdown("### Ajuste os pesos:")
         for i, (criterio, ajuda) in enumerate(criterios.items()):
             peso = st.slider(
@@ -105,38 +101,24 @@ def main():
             )
             pesos[criterio] = peso
             total += peso
-    
         if total!=100:
             st.error(f"❌ Excesso de {total-100}%")
-    
         st.subheader("Resultados da Simulação")
-        
         if total == 100:
-        
-            mapa_escala = {
-                "Baixo": 0.8, "Baixo/Médio": 0.65, "Médio": 0.5,
+            mapa_escala = {"Baixo": 0.8, "Baixo/Médio": 0.65, "Médio": 0.5,
                 "Médio/Alto": 0.35, "Alto": 0.2,
-        
                 "Baixa": 0.2, "Média": 0.5, "Alta": 0.8,
-        
                 "Lenta": 0.2, "Média": 0.5, "Rápida": 0.8,
-        
                 "Tradicional": 0.3, "Média": 0.5, "Inovativa": 0.9,
-        
                 "No Limite": 0.3, "Próxima ao Limite": 0.5, "Com Folga": 0.8,
-        
-                "Pouco Precisa": 0.3, "Erros Aceitáveis": 0.5, "Precisa": 0.85
-            }
-        
-            desempenho_empresa = {
-                "Custo": mapa_escala[Custo],
+                "Pouco Precisa": 0.3, "Erros Aceitáveis": 0.5, "Precisa": 0.85}
+            desempenho_empresa = {"Custo": mapa_escala[Custo],
                 "Qualidade": mapa_escala[Qual],
                 "Flexibilidade": mapa_escala[Flex],
                 "Entrega": mapa_escala[Entrega],
                 "Inovação Tecnológica": mapa_escala[Inov],
                 "Capacidade": mapa_escala[Cap],
-                "Previsão de Demanda": mapa_escala[Prev]
-            }
+                "Previsão de Demanda": mapa_escala[Prev]}
         resultados_concorrencia = {}
 
         idx=0
@@ -144,9 +126,7 @@ def main():
             sim = np.random.normal(medias[idx], dev[idx], 500)
             idx+=1
             sim = np.clip(sim, 0, 1)
-    
             resultados_concorrencia[criterio] = sim.mean()
-    
         score_empresa = 0
         score_concorrencia = 0
     
@@ -169,7 +149,9 @@ def main():
             st.metric("Score da Empresa", f"{score_empresa:.3f}")
         with colB:
             st.metric("Score da Concorrência", f"{score_concorrencia:.3f}")
-
+#################################################################################################################################################################################
+#################################################################################################################################################################################
+#################################################################################################################################################################################
     else:
         if choice == menu[1]:
             st.subheader("Indique o cenário atual da sua empresa:")
@@ -413,8 +395,11 @@ def main():
             st.header("📊 Resultados da Simulação")
             
             with st.spinner("Calculando resultados..."):
-                resultados, lucro_total = simular_lucro_simples(Capacidade, Eficiencia, Penalidade, Demandas, decisoes_anuais)
+                #resultados, lucro_total = simular_lucro_simples(Capacidade, Eficiencia, Penalidade, Demandas, decisoes_anuais)
                 st.success(f"Lucro Total: R$ {lucro_total:,.2f}")
+#################################################################################################################################################################################
+#################################################################################################################################################################################
+#################################################################################################################################################################################
         else:    
         
             if choice == menu[6]:
