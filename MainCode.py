@@ -270,7 +270,7 @@ def main():
                     'detalhes': opcoes[acao_selecionada]
                 }
             #######Simulação####################################################       
-            capacidade_atual = Capacidade  
+            capacidade_atual = Capacidade 
             eficiencia_atual = Eficiencia
             custo_variavel_atual = custo_variavel_base 
             custo_fixo_atual = custo_fixo_mensal 
@@ -279,7 +279,6 @@ def main():
             lucro_acumulado = 0
             fluxo_caixa_anual = []
             for i, ano in enumerate(Anos):
-                st.write(i)
                 decisao = decisoes_anuais[ano]
                 detalhes = decisao['detalhes']
                 
@@ -304,7 +303,7 @@ def main():
                     elif decisao['acao'] == "Nada":
                         pass  # Nenhuma alteração
                     elif decisao['acao'] in ["Nova máquina", "Automação"]:
-                        mes_implantacao = ano + (detalhes['tempo_meses'] / 12)
+                        mes_implantacao = ano + (detalhes['tempo'] / 12)
                         investimentos_pendentes[mes_implantacao] = {
                             'tipo': decisao['acao'],
                             'custo': detalhes['custo_fixo']
@@ -330,7 +329,7 @@ def main():
                 custo_fixo_anual = custo_fixo_atual * 12
                 custo_penalidade = unidades_nao_atendidas * Penalidade
                 custo_investimento = 0
-                if detalhes['tempo_meses'] == 0 and decisao['acao'] in ["Nova máquina", "Automação"]:
+                if detalhes['tempo'] == 0 and decisao['acao'] in ["Nova máquina", "Automação"]:
                     custo_investimento = detalhes['custo_fixo']
                 lucro_anual = receita - custo_var_total - custo_fixo_anual - custo_penalidade - custo_investimento
                 
