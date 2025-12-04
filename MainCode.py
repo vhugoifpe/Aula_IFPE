@@ -161,7 +161,6 @@ def main():
             preco_venda = st.number_input("Preço de venda por unidade (R$)", min_value=0.0, value=25.0, step=0.5, help="Preço que você vende cada unidade")
             custo_variavel_base = st.number_input("Custo variável base por unidade (R$)", min_value=0.0, value=8.0, step=0.5, help="Custo variável atual por unidade produzida")
             custo_fixo_mensal = st.number_input("Custo fixo mensal atual (R$/mês)", min_value=0.0, value=50000.0, step=1000.0, help="Custos fixos mensais atuais")
-            taxa_juros = st.number_input("Taxa de juros anual para desconto (%)", min_value=0.0, value=10.0, step=0.5, help="Taxa para calcular valor presente dos fluxos") / 100
             Anos = [2025, 2026, 2027, 2028, 2029]
             Demandas = {}
             for ano in Anos:
@@ -335,10 +334,7 @@ def main():
                 
                 fluxo_caixa_anual.append(lucro_anual)
                 lucro_acumulado += lucro_anual
-            vpl = 0
-            for t, fluxo in enumerate(fluxo_caixa_anual):
-                vpl += fluxo / ((1 + taxa_juros) ** t)
-                    
+                                
             st.header("📊 Resultados da Simulação")
             if st.button("Simular"):
                 st.write(str(lucro_acumulado))
