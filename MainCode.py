@@ -176,7 +176,7 @@ def main():
         Capacidade=st.number_input("Capacidade (unid/mês)", help="Selecione o nível de capacidade da sua empresa.")
         Eficiencia=st.number_input("Eficiência (%)", help="Selecione o nível de eficiência da sua empresa.")
         Penalidade=st.number_input("Custo de penalidade por unidade não atendida (R$/unid)", help="Selecione o custo de penlidade.")
-        Anos = [2024, 2025, 2026, 2027, 2028]
+        Anos = [2025, 2026, 2027, 2028, 2029]
         Demandas = {}
         for ano in Anos:
             col1, col2 = st.columns(2)
@@ -203,12 +203,65 @@ def main():
                     key=f"erro_{ano}"
                 )
             
-            Demandas[ano-2024] = {
+            Demandas[ano-2025] = {
                 'media': media,
                 'erro': erro,
                 'min': max(0, media - erro),  # Não pode ser negativo
                 'max': media + erro
             }
+
+            df_opcoes = pd.DataFrame({
+            'Opção': ['Turno extra', 'Nova máquina', 'Automação', 'Terceirização'],
+            'Custo fixo': ['R$ 120.000/mês', 'R$ 900.000', 'R$ 1.500.000', 'sem custo fixo'],
+            'Custo variável': ['↑ 15% mão de obra', '+R$ 0,30/unidade', 'reduz 20% MO', 'R$ 4/unidade'],
+            'Impacto': ['+25% capacidade', '+40% capacidade', '+20% capacidade + +10% eficiência', 'capacidade ilimitada'],
+            'Tempo de implantação': ['imediato', '6 meses', '1 ano', 'imediato'],
+            'Selecionado': [False, False, False, False],  # Para checkbox
+            'Ativo': [False, False, False, False]  # Para simulação
+        })
+        
+        # Exibir tabela com possibilidade de seleção
+        st.subheader("Opções Disponíveis")
+        
+        # Criar uma cópia para edição
+        df_editavel = df_opcoes.copy()
+        
+        # Adicionar checkboxes para seleção
+        selecoes = []
+        for i, row in df_editavel.iterrows():
+            col1, col2, col3 = st.columns([1, 3, 1])
+            
+            with col1:
+                selecionado = st.checkbox(
+                    "Selecionar", 
+                    value=row['Selecionado'],
+                    key=f"sel_{i}"
+                )
+            
+            with col2:
+                st.markdown(f"**{row['Opção']}**")
+                st.caption(f"**Custo fixo:** {row['Custo fixo']}")
+                st.caption(f"**Custo variável:** {row['Custo variável']}")
+                st.caption(f"**Impacto:** {row['Impacto']}")
+                st.caption(f"**Tempo:** {row['Tempo de implantação']}")
+            
+            with col3:
+                ativo = st.toggle(
+                    "Ativar",
+                    value=row['Ativo'],
+                    key=f"ativo_{i}"
+                )
+            
+            selecoes.append({
+                'Opção': row['Opção'],
+                'Selecionado': selecionado,
+                'Ativo': ativo
+            })
+            
+            st.divider()
+        
+        # Converter seleções de volta para o DataFrame
+        df_selecoes = pd.DataFrame(selecoes)
         
         
     if choice == menu[6]:
