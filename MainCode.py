@@ -334,7 +334,7 @@ def main():
                     [80, 48], [81, 50], [82, 52], [83, 32], [84, 30], [85, 44], [86, 47], [87, 49], [88, 51], [89, 54]]
                 
                 df = pd.DataFrame(data, columns=["date", "sales"])
-                
+
                 st.subheader("📊 Série Temporal de Vendas")
                 st.set_option('deprecation.showPyplotGlobalUse', False)
                 plt.figure(figsize=(8,4))
@@ -349,14 +349,23 @@ def main():
                 
                 modelo = st.selectbox(
                     "Escolha o modelo:",
-                    ["Média Móvel", "Acompanhamento da Demanda", "Sazonal Ingênuo", "Suavização Exponencial (SES)"])
+                    ["Média Móvel",
+                     "Acompanhamento da Demanda",
+                     "Sazonal Ingênuo",
+                     "Suavização Exponencial (SES)",
+                     "Random Forest Regressor (ML)"]   # ← NOVO MODELO
+                )
                 
+                # parâmetros dos modelos
                 if modelo == "Média Móvel":
                     janela = st.slider("Escolha a janela da média móvel:", 2, 30, 7)
                 elif modelo == "Sazonal Ingênuo":
                     sazonalidade = st.slider("Período sazonal:", 2, 60, 7)
                 elif modelo == "Suavização Exponencial (SES)":
                     alpha = st.slider("Alpha (0 = lento, 1 = reativo)", 0.01, 0.99, 0.3)
+                elif modelo == "Random Forest Regressor (ML)":
+                    lags = st.slider("Número de defasagens (lags):", 1, 30, 7)
+                    n_estimators = st.slider("Número de árvores:", 50, 600, 300, step=50)
                 
                 st.subheader("🛠 Período de treino")
                 train_pct = st.slider(
@@ -376,6 +385,7 @@ def main():
                 df_train["forecast"] = np.nan
                 df_test["forecast"] = np.nan
                 
+                # -------- FUNÇÃO SES ---------
                 def ses_in_sample_and_forecast(series, alpha, horizon):
                     n = len(series)
                     fitted = np.zeros(n)
@@ -388,8 +398,20 @@ def main():
                     forecast = np.array([last_level] * horizon)
                     return fitted, forecast
                 
+                # -------- FUNÇÃO PARA LAGS (para o modelo ML) ---------
+                def criar_lags(df_base, n_lags):
+                    df_lag = df_base.copy()
+                    for i in range(1, n_lags+1):
+                        df_lag[f"lag_{i}"] = df_lag["sales"].shift(i)
+                    return df_lag.dropna().reset_index(drop=True)
+                
+                from sklearn.ensemble import RandomForestRegressor
+                
+                
+                # ================ MODELAGEM ================
                 if modelo == "Média Móvel":
                     df_train["forecast"] = df_train["sales"].rolling(janela).mean().fillna(method="bfill")
+                
                     history = list(df_train["sales"].iloc[-janela:])
                     test_forecasts = []
                     for i in range(len(df_test)):
@@ -404,17 +426,56 @@ def main():
                 
                 elif modelo == "Sazonal Ingênuo":
                     df_train["forecast"] = df_train["sales"].shift(sazonalidade).fillna(method="bfill")
-                    last_season = list(df_train["sales"].iloc[-sazonalidade:])  # ordem cronológica
+                    last_season = list(df_train["sales"].iloc[-sazonalidade:])
                     reps = (len(df_test) // sazonalidade) + 1
                     repeated = (last_season * reps)[:len(df_test)]
                     df_test["forecast"] = repeated
                 
                 elif modelo == "Suavização Exponencial (SES)":
                     series_train = df_train["sales"].values
-                    fitted_vals, forecast_vals = ses_in_sample_and_forecast(series_train, alpha, len(df_test))
+                    fitted_vals, forecast_vals = ses_in_sample_and_forecast(
+                        series_train,
+                        alpha,
+                        len(df_test)
+                    )
                     df_train["forecast"] = fitted_vals
                     df_test["forecast"] = forecast_vals
                 
+                
+                # ----------- NOVO MODELO: RANDOM FOREST -----------
+                elif modelo == "Random Forest Regressor (ML)":
+                
+                    # Criar base com lags
+                    df_lag = criar_lags(df, lags)
+                
+                    train_lag = df_lag.iloc[:train_size - lags]   # corrigindo pela perda inicial
+                    test_lag  = df_lag.iloc[train_size - lags:]
+                
+                    X_train = train_lag.drop(["date", "sales"], axis=1)
+                    y_train = train_lag["sales"]
+                
+                    X_test = test_lag.drop(["date", "sales"], axis=1)
+                    y_test = test_lag["sales"]
+                
+                    # Modelo
+                    model = RandomForestRegressor(
+                        n_estimators=n_estimators,
+                        random_state=42
+                    )
+                    model.fit(X_train, y_train)
+                
+                    # Previsões
+                    train_pred = model.predict(X_train)
+                    test_pred  = model.predict(X_test)
+                
+                    # Colocar no df_train e df_test (alinhando tamanhos)
+                    df_train = df_train.tail(len(train_pred)).copy()
+                    df_train["forecast"] = train_pred
+                
+                    df_test["forecast"] = test_pred
+                
+                
+                # ================ PLOTAGEM ================
                 df_train["set"] = "train"
                 df_test["set"] = "test"
                 df_all = pd.concat([df_train, df_test]).reset_index(drop=True)
@@ -432,14 +493,16 @@ def main():
                 plt.grid(True)
                 st.pyplot()
                 
+                # ================ MÉTRICAS ================
                 st.subheader("📌 Métricas de Desempenho (Conjunto de Teste)")
                 
                 mask_valid = df_test["sales"] != 0
+                error = df_test["sales"] - df_test["forecast"]
+                abs_error = error.abs()
+                
                 if mask_valid.sum() == 0:
                     st.error("Conjunto de teste contém apenas zeros — MAPE indefinido.")
                 else:
-                    error = df_test["sales"] - df_test["forecast"]
-                    abs_error = error.abs()
                     mae = abs_error.mean()
                     rmse = np.sqrt((error ** 2).mean())
                     mape = (abs_error[mask_valid] / df_test.loc[mask_valid, "sales"]).mean() * 100
@@ -453,7 +516,6 @@ def main():
                     st.dataframe(metrics.style.format("{:.3f}"))
                 
                     st.subheader("📉 Erro Absoluto ao longo do tempo (Conjunto de Teste)")
-                
                     plt.figure(figsize=(10,3))
                     plt.bar(df_test["date"], abs_error, color="tab:orange")
                     plt.xlabel("Data")
@@ -462,7 +524,6 @@ def main():
                     st.pyplot()
                 
                     st.subheader("📊 Distribuição do Erro (Conjunto de Teste)")
-                
                     plt.figure(figsize=(6,3))
                     plt.hist(error, bins=12, edgecolor="black")
                     plt.xlabel("Erro")
