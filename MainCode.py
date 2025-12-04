@@ -274,14 +274,13 @@ def main():
             def simular_lucro(Capacidade, Eficiencia, Penalidade, Demandas, decisoes_anuais, preco_venda, custo_variavel_base, custo_fixo_mensal, taxa_juros):
                 capacidade_atual = Capacidade  
                 eficiencia_atual = Eficiencia
-                custo_variavel_atual = custo_variavel_base  # R$/unidade
-                custo_fixo_atual = custo_fixo_mensal  # R$/mês
+                custo_variavel_atual = custo_variavel_base 
+                custo_fixo_atual = custo_fixo_mensal 
                 
                 investimentos_pendentes = {}
                 resultados = []
                 lucro_acumulado = 0
                 fluxo_caixa_anual = []
-                
                 for i, ano in enumerate(Anos):
                     decisao = decisoes_anuais[ano]
                     detalhes = decisao['detalhes']
@@ -307,7 +306,6 @@ def main():
                         elif decisao['acao'] == "Nada":
                             pass  # Nenhuma alteração
                         elif decisao['acao'] in ["Nova máquina", "Automação"]:
-                            # Esses têm tempo de implantação, então adicionar à lista de pendentes
                             mes_implantacao = ano + (detalhes['tempo_meses'] / 12)
                             investimentos_pendentes[mes_implantacao] = {
                                 'tipo': decisao['acao'],
@@ -359,10 +357,10 @@ def main():
                 for t, fluxo in enumerate(fluxo_caixa_anual):
                     vpl += fluxo / ((1 + taxa_juros) ** t)
                 
-                return resultados, lucro_acumulado, vpl
+                return lucro_acumulado, vpl
                 
             st.header("📊 Resultados da Simulação")
-            simular_lucro_simples(Capacidade, Eficiencia, Penalidade, Demandas, decisoes_anuais)
+            simular_lucro_simples(Capacidade, Eficiencia, Penalidade, Demandas, decisoes_anuais, preco_venda, custo_variavel_base, custo_fixo_mensal, taxa_juros)
 #################################################################################################################################################################################
 #################################################################################################################################################################################
 #################################################################################################################################################################################
