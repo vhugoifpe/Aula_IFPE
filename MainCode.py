@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 import pandas as pd
 from math import sqrt
+from io import StringIO
 
 def main():
     #criando 3 colunas
@@ -326,179 +327,162 @@ def main():
 #################################################################################################################################################################################
         else:    
             if choice == menu[2]:
-                n_periods = st.sidebar.slider("Número de períodos da série (quando simulado)", 24, 600, 120)
-                seasonal = st.sidebar.checkbox("Incluir sazonalidade (12 períodos)", value=True)
-                trend = st.sidebar.slider("Inclinação da tendência (valor adicionado por período)", -1.0, 2.0, 0.2)
-                noise_std = st.sidebar.slider("Desvio padrão do ruído", 0.0, 20.0, 3.0)
-                t = np.arange(n_periods)
-                base = 100 + trend * t
-                seas = (10 * np.sin(2 * np.pi * t / 12)) if seasonal else 0
-                noise = np.random.normal(0, noise_std, n_periods)
-                series = base + seas + noise
-                index = pd.RangeIndex(start=1, stop=len(series)+1, step=1)
+                data = """
+                        date,store_nbr,item_nbr,sales
+                        2017-01-01,1,101,12
+                        2017-01-02,1,101,18
+                        2017-01-03,1,101,17
+                        2017-01-04,1,101,19
+                        2017-01-05,1,101,22
+                        2017-01-06,1,101,20
+                        2017-01-07,1,101,15
+                        2017-01-08,1,101,13
+                        2017-01-09,1,101,21
+                        2017-01-10,1,101,23
+                        2017-01-11,1,101,25
+                        2017-01-12,1,101,26
+                        2017-01-13,1,101,28
+                        2017-01-14,1,101,18
+                        2017-01-15,1,101,16
+                        2017-01-16,1,101,24
+                        2017-01-17,1,101,27
+                        2017-01-18,1,101,30
+                        2017-01-19,1,101,31
+                        2017-01-20,1,101,29
+                        2017-01-21,1,101,20
+                        2017-01-22,1,101,18
+                        2017-01-23,1,101,28
+                        2017-01-24,1,101,32
+                        2017-01-25,1,101,33
+                        2017-01-26,1,101,34
+                        2017-01-27,1,101,35
+                        2017-01-28,1,101,21
+                        2017-01-29,1,101,19
+                        2017-01-30,1,101,30
+                        2017-01-31,1,101,33
+                        2017-02-01,1,101,34
+                        2017-02-02,1,101,36
+                        2017-02-03,1,101,37
+                        2017-02-04,1,101,23
+                        2017-02-05,1,101,20
+                        2017-02-06,1,101,31
+                        2017-02-07,1,101,35
+                        2017-02-08,1,101,40
+                        2017-02-09,1,101,41
+                        2017-02-10,1,101,44
+                        2017-02-11,1,101,26
+                        2017-02-12,1,101,23
+                        2017-02-13,1,101,33
+                        2017-02-14,1,101,50
+                        2017-02-15,1,101,48
+                        2017-02-16,1,101,46
+                        2017-02-17,1,101,47
+                        2017-02-18,1,101,30
+                        2017-02-19,1,101,25
+                        2017-02-20,1,101,37
+                        2017-02-21,1,101,39
+                        2017-02-22,1,101,42
+                        2017-02-23,1,101,44
+                        2017-02-24,1,101,45
+                        2017-02-25,1,101,27
+                        2017-02-26,1,101,26
+                        2017-02-27,1,101,40
+                        2017-02-28,1,101,43
+                        2017-03-01,1,101,45
+                        2017-03-02,1,101,48
+                        2017-03-03,1,101,51
+                        2017-03-04,1,101,28
+                        2017-03-05,1,101,25
+                        2017-03-06,1,101,38
+                        2017-03-07,1,101,42
+                        2017-03-08,1,101,45
+                        2017-03-09,1,101,47
+                        2017-03-10,1,101,52
+                        2017-03-11,1,101,30
+                        2017-03-12,1,101,27
+                        2017-03-13,1,101,40
+                        2017-03-14,1,101,43
+                        2017-03-15,1,101,46
+                        2017-03-16,1,101,49
+                        2017-03-17,1,101,53
+                        2017-03-18,1,101,31
+                        2017-03-19,1,101,29
+                        2017-03-20,1,101,42
+                        2017-03-21,1,101,45
+                        2017-03-22,1,101,48
+                        2017-03-23,1,101,50
+                        2017-03-24,1,101,52
+                        2017-03-25,1,101,32
+                        2017-03-26,1,101,30
+                        2017-03-27,1,101,44
+                        2017-03-28,1,101,47
+                        2017-03-29,1,101,49
+                        2017-03-30,1,101,51
+                        2017-03-31,1,101,54
+                        """
+                df = pd.read_csv(StringIO(data), parse_dates=["date"])
                 
-                df = pd.DataFrame({"y": series}, index=index)
+                st.dataframe(df.head())
+                df["date"] = pd.to_datetime(df["date"])
                 
-                st.subheader("Série temporal (dados reais)")
-                col1, col2 = st.columns([3,1])
-                with col1:
-                    fig, ax = plt.subplots(figsize=(9,3.5))
-                    ax.plot(df.index, df['y'], label="Real", linewidth=1)
-                    ax.set_title("Série histórica")
-                    ax.grid(True)
-                    ax.legend()
-                    st.pyplot(fig)
-                with col2:
-                    st.markdown("### Ruptura / choque")
-                    add_break = st.button("Adicionar ruptura estrutural (a partir do período P)")
-                    if add_break:
-                        p = st.number_input("Período inicial da ruptura (índice inteiro)", 1, len(df), value=int(len(df)//2))
-                        magnitude = st.number_input("Magnitude do choque (valor adicionado)", -200.0, 200.0, 30.0)
-                        df.loc[df.index >= df.index[p-1], 'y'] += magnitude
-                        st.success(f"Ruptura adicionada a partir do período {p}: +{magnitude}")
-                        fig2, ax2 = plt.subplots(figsize=(6,3))
-                        ax2.plot(df.index, df['y'], label="Real (com ruptura)")
-                        ax2.grid(True)
-                        ax2.legend()
-                        st.pyplot(fig2)
+                st.subheader("⚙️ Modelo de Previsão Utilizado")
                 
-                st.subheader("Modelos e parâmetros")
-                model_choice = st.selectbox("Escolha o modelo de previsão", 
-                                            ("Média Móvel", "Suavização Exponencial (SES)", "Holt (tendência)", "Regressão Linear"))
+                df["forecast"] = df["sales"].rolling(3).mean().fillna(method="bfill")
+                df["error"] = df["sales"] - df["forecast"]
+                df["abs_error"] = df["error"].abs()
+                st.code("df['forecast'] = df['sales'].rolling(3).mean()")
                 
-                train_size = st.slider("Período de treino (número de pontos usados para treinar)", 10, len(df)-1, int(len(df)*0.7))
-                horizon = st.slider("Horizonte de previsão (número de períodos à frente)", 1, 36, 6)
+                st.subheader("📈 1. Série Temporal — Observado vs Previsto")
                 
-                if model_choice == "Média Móvel":
-                    ma_window = st.slider("Janela da média móvel", 2, 24, 3)
-                elif model_choice == "Suavização Exponencial (SES)":
-                    alpha = st.slider("Alpha (0-1)", 0.01, 0.99, 0.3)
-                elif model_choice == "Holt (tendência)":
-                    alpha = st.slider("Alpha (nivel)", 0.01, 0.99, 0.3)
-                    beta = st.slider("Beta (tendência)", 0.0, 0.5, 0.05)
-                else:
-                    pass  
+                plt.figure(figsize=(8,4))
+                plt.plot(df["date"], df["sales"], label="Vendas Observadas")
+                plt.plot(df["date"], df["forecast"], label="Previsão", linestyle="--")
+                plt.xlabel("Data")
+                plt.ylabel("Vendas")
+                plt.legend()
+                st.pyplot()
                 
-                def moving_average_forecast(series, train_size, window, horizon):
-                    train = series[:train_size]
-                    if len(train) < window:
-                        window = max(1, len(train))
-                    last_ma = np.mean(train[-window:])
-                    forecast = np.array([last_ma]*horizon)
-                    fitted = np.concatenate([train, np.array([np.nan]*(len(series)-len(train)))])
-                    return fitted, forecast
+                st.subheader("📊 2. Erro Absoluto ao longo do tempo")
                 
-                def ses_forecast(series, train_size, alpha, horizon):
-                    train = series[:train_size]
-                    s = train[0]
-                    fitted_vals = [s]
-                    for t in range(1, len(train)):
-                        s = alpha * train[t-1] + (1-alpha) * s
-                        fitted_vals.append(s)
-                    last = s
-                    forecast = np.array([last]*horizon)
-                    fitted = np.concatenate([np.array(fitted_vals), np.array([np.nan]*(len(series)-len(train)))])
-                    return fitted, forecast
+                plt.figure(figsize=(8,4))
+                plt.bar(df["date"], df["abs_error"])
+                plt.xlabel("Data")
+                plt.ylabel("Erro Absoluto")
+                st.pyplot()
                 
-                def holt_forecast(series, train_size, alpha, beta, horizon):
-                    train = series[:train_size]
-                    l = train[0]
-                    b = train[1] - train[0] if len(train) > 1 else 0.0
-                    fitted_vals = [l]
-                    for t in range(1, len(train)):
-                        prev_l = l
-                        l = alpha * train[t] + (1-alpha) * (l + b)
-                        b = beta * (l - prev_l) + (1-beta) * b
-                        fitted_vals.append(l)
-                    forecast = np.array([l + b*(k+1) for k in range(horizon)])
-                    fitted = np.concatenate([np.array(fitted_vals), np.array([np.nan]*(len(series)-len(train)))])
-                    return fitted, forecast
+                st.subheader("📉 3. Distribuição do Erro")
                 
-                def regression_forecast(series, train_size, horizon):
-                    X = np.arange(train_size).reshape(-1,1)
-                    y = series[:train_size]
-                    model = LinearRegression().fit(X,y)
-                    fitted_vals = model.predict(np.arange(len(series)).reshape(-1,1))
-                    future_X = np.arange(train_size, train_size+horizon).reshape(-1,1)
-                    forecast = model.predict(future_X)
-                    return fitted_vals, forecast
+                plt.figure(figsize=(6,4))
+                plt.hist(df["error"], bins=8, edgecolor="black")
+                plt.xlabel("Erro")
+                plt.ylabel("Frequência")
+                st.pyplot()
                 
-                def compute_metrics(actual, predicted):
-                    mask = ~np.isnan(predicted)
-                    actual = np.array(actual)[mask]
-                    predicted = np.array(predicted)[mask]
-                    error = actual - predicted
-                    mae = np.mean(np.abs(error))
-                    mape = np.mean(np.abs(error / (actual + 1e-9))) * 100
-                    rmse = sqrt(np.mean(error**2))
-                    bias = np.mean(error)
-                    cum_error = np.sum(error)
-                    mad = np.mean(np.abs(error)) + 1e-9
-                    tracking_signal = cum_error / mad
-                    return {"MAE": mae, "MAPE": mape, "RMSE": rmse, "Bias": bias, "Tracking Signal": tracking_signal}
+                st.subheader("🔥 4. Heatmap de Correlações")
                 
-                series_vals = df['y'].values
-                fitted = None
-                forecast = None
+                corr = df[["sales", "forecast", "error", "abs_error"]].corr()
                 
-                if st.button("Rodar modelo"):
-                    if train_size < 3:
-                        st.error("Escolha um período de treino maior (>= 3).")
-                    else:
-                        if model_choice == "Média Móvel":
-                            fitted, forecast = moving_average_forecast(series_vals, train_size, ma_window, horizon)
-                        elif model_choice == "Suavização Exponencial (SES)":
-                            fitted, forecast = ses_forecast(series_vals, train_size, alpha, horizon)
-                        elif model_choice == "Holt (tendência)":
-                            fitted, forecast = holt_forecast(series_vals, train_size, alpha, beta, horizon)
-                        elif model_choice == "Regressão Linear":
-                            fitted, forecast = regression_forecast(series_vals, train_size, horizon)
-                        else:
-                            st.error("Modelo não implementado.")
-                        
-                        fitted_for_metrics = fitted.copy()
-                        metrics = compute_metrics(series_vals[:train_size], fitted_for_metrics[:train_size])
+                plt.figure(figsize=(4,3))
+                plt.imshow(corr, cmap="coolwarm", interpolation="nearest")
+                plt.xticks(range(len(corr)), corr.columns, rotation=45)
+                plt.yticks(range(len(corr)), corr.columns)
+                plt.colorbar()
+                st.pyplot()
                 
-                        st.subheader("Métricas do modelo (sobre o período de treino)")
-                        mcols = st.columns(5)
-                        mcols[0].metric("MAE", f"{metrics['MAE']:.3f}")
-                        mcols[1].metric("MAPE", f"{metrics['MAPE']:.2f}%")
-                        mcols[2].metric("RMSE", f"{metrics['RMSE']:.3f}")
-                        mcols[3].metric("Bias", f"{metrics['Bias']:.3f}")
-                        mcols[4].metric("Tracking Signal", f"{metrics['Tracking Signal']:.2f}")
+                st.subheader("📌 5. Métricas Gerais do Modelo")
                 
-                        full_index = list(df.index) + [f"F{ i+1 }" for i in range(horizon)]
-                        plt.figure(figsize=(10,4))
-                        plt.plot(df.index, series_vals, label="Real (historico)", linewidth=1)
-                        if fitted is not None:
-                            mask_f = ~np.isnan(fitted)
-                            plt.plot(df.index[mask_f], np.array(fitted)[mask_f], label="Fitted (in-sample)", linestyle="--")
-                        if forecast is not None:
-                            plt.plot(full_index[-horizon:], forecast, label="Forecast (out-of-sample)", marker='o')
-                        plt.axvline(x=df.index[train_size-1], color='gray', linestyle=':', label='Fim do treino')
-                        plt.legend()
-                        plt.grid(True)
-                        st.pyplot(plt.gcf())
+                mae = df["abs_error"].mean()
+                mse = (df["error"]**2).mean()
+                rmse = np.sqrt(mse)
+                mape = (df["abs_error"] / df["sales"]).mean() * 100
                 
-                        df_fore = pd.DataFrame({"Periodo": full_index, "Valor": list(series_vals) + [np.nan]*horizon})
-                        fitted_col = list(fitted) if fitted is not None else [np.nan]*len(df_fore)
-                        forecast_col = [np.nan]*len(df_fore)
-                        for i in range(horizon):
-                            forecast_col[len(df_fore)-horizon + i] = forecast[i]
-                        df_fore["Fitted"] = fitted_col
-                        df_fore["Forecast"] = forecast_col
-                        st.subheader("Tabela: últimos pontos e previsão")
-                        st.dataframe(df_fore.tail(20).reset_index(drop=True))
+                metrics = pd.DataFrame({
+                    "MAE": [mae],
+                    "RMSE": [rmse],
+                    "MAPE (%)": [mape]
+                })
                 
-                        ts = metrics["Tracking Signal"]
-                        if abs(ts) > 4:
-                            st.warning(
-                                f"⚠️ Tracking Signal = {ts:.2f} — indica viés persistente. Recomenda-se retreinar o modelo ou ajustar parâmetros.")
-                        elif metrics["MAPE"] > 20:
-                            st.info(
-                                f"ℹ️ MAPE = {metrics['MAPE']:.2f}% — erro elevado. Considere trocar o modelo ou coletar mais dados / features.")
-                        else:
-                            st.success("✅ Modelo com desempenho aceitável no período de treino.")
+                st.dataframe(metrics.style.format("{:.2f}"))
             #####################################################################################################################################################################
             #####################################################################################################################################################################
             #####################################################################################################################################################################
