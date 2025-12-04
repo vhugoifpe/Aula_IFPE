@@ -162,11 +162,19 @@ def main():
             custo_variavel_base = st.number_input("Custo variável base por unidade (R$)", min_value=0.0, value=8.0, step=0.5, help="Custo variável atual por unidade produzida")
             custo_fixo_mensal = st.number_input("Custo fixo mensal atual (R$/mês)", min_value=0.0, value=50000.0, step=1000.0, help="Custos fixos mensais atuais")
             Anos = [2025, 2026, 2027, 2028, 2029]
-            Demandas=[st.number_input("Demanda esperada no ano de 2025",value=1000)]
-            Demandas.append(st.number_input("Demanda esperada no ano de 2026",value=800))
-            Demandas.append(st.number_input("Demanda esperada no ano de 2027",value=900))
-            Demandas.append(st.number_input("Demanda esperada no ano de 2028",value=1000))
-            Demandas.append(st.number_input("Demanda esperada no ano de 2029",value=1000))
+            valores_padrao = [1000, 800, 900, 1000, 1000]
+            Demandas = []
+            for i, (col, ano, valor_padrao) in enumerate(zip(st.columns(5), Anos, valores_padrao)):
+                with col:
+                    demanda = st.number_input(
+                        f"{ano}", 
+                        min_value=0,
+                        value=valor_padrao,
+                        step=100,
+                        help=f"Demanda esperada para {ano}",
+                        key=f"demanda_{ano}"
+                    )
+                    Demandas.append(demanda)
             st.title("📋 Opções de Expansão de Capacidade")
             st.markdown("""
             ### 🏭 **Turno extra**
