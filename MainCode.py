@@ -72,15 +72,7 @@ def main():
                     value=0.1,
                     step=0.01,
                     help=f"{help_text} - Desvio-padrão"
-                )
-        
-        
-        st.subheader("Click on botton below to run this application:")    
-        botao = st.button("Get cost-rate")
-        if botao:
-            st.write("---RESULT---")
-            st.write("Cost-rate", KD_KT(K, Delta, T))
-         
+                ) 
     if choice == menu[1]:
         st.header(menu[1])
         st.write("<h6 style='text-align: justify; color: Blue Jay;'>Este aplicativo é referente à aula...</h6>", unsafe_allow_html=True)
