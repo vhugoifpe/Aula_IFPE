@@ -210,33 +210,68 @@ def main():
                 'max': media + erro
             }
 
-            st.title("📋 Opções de Expansão de Capacidade")
+        st.title("📋 Opções de Expansão de Capacidade")
 
-            st.markdown("""
-            ### 🏭 **Turno extra**
-            - **Custo fixo:** R$ 120.000/mês
-            - **Custo variável:** ↑ 15% mão de obra
-            - **Impacto:** +25% capacidade
-            - **Tempo de implantação:** imediato
+        st.markdown("""
+        ### 🏭 **Turno extra**
+        - **Custo fixo:** R$ 120.000/mês
+        - **Custo variável:** ↑ 15% mão de obra
+        - **Impacto:** +25% capacidade
+        - **Tempo de implantação:** imediato
+        
+        ### 🏗️ **Nova máquina**
+        - **Custo fixo:** R$ 900.000
+        - **Custo variável:** +R$ 0,30/unidade
+        - **Impacto:** +40% capacidade
+        - **Tempo de implantação:** 6 meses
+        
+        ### 🤖 **Automação**
+        - **Custo fixo:** R$ 1.500.000
+        - **Custo variável:** reduz 20% MO
+        - **Impacto:** +20% capacidade + +10% eficiência
+        - **Tempo de implantação:** 1 ano
+        
+        ### 📦 **Terceirização**
+        - **Custo fixo:** sem custo fixo
+        - **Custo variável:** R$ 4/unidade
+        - **Impacto:** capacidade ilimitada
+        - **Tempo de implantação:** imediato
+        """)
+        st.subheader("Planeje as ações para cada início de ano:")
+
+        # Dicionário para armazenar as decisões
+        decisoes_anuais = {}
+        
+        for ano in anos:
+            st.markdown(f"### 🗓️ Início de {ano}")
             
-            ### 🏗️ **Nova máquina**
-            - **Custo fixo:** R$ 900.000
-            - **Custo variável:** +R$ 0,30/unidade
-            - **Impacto:** +40% capacidade
-            - **Tempo de implantação:** 6 meses
+            col1, col2 = st.columns([2, 1])
             
-            ### 🤖 **Automação**
-            - **Custo fixo:** R$ 1.500.000
-            - **Custo variável:** reduz 20% MO
-            - **Impacto:** +20% capacidade + +10% eficiência
-            - **Tempo de implantação:** 1 ano
+            with col1:
+                # Selectbox para escolher a ação
+                acao_selecionada = st.selectbox(
+                    f"O que fazer em {ano}?",
+                    options=list(opcoes.keys()),
+                    index=0,  # "Nada" por padrão
+                    key=f"acao_{ano}",
+                    help=f"Escolha a ação a ser implementada no início de {ano}"
+                )
             
-            ### 📦 **Terceirização**
-            - **Custo fixo:** sem custo fixo
-            - **Custo variável:** R$ 4/unidade
-            - **Impacto:** capacidade ilimitada
-            - **Tempo de implantação:** imediato
-            """)
+            with col2:
+                # Mostrar detalhes da opção selecionada
+                if acao_selecionada != "Nada":
+                    st.info(f"**{acao_selecionada}**")
+                    st.caption(f"Tempo: {opcoes[acao_selecionada]['tempo']}")
+                else:
+                    st.info("**Manter operação atual**")
+            # Armazenar a decisão
+            decisoes_anuais[ano] = {
+                'acao': acao_selecionada,
+                'observacao': observacao,
+                'detalhes': opcoes[acao_selecionada]
+            }
+            
+            st.divider()
         
         
     if choice == menu[6]:
