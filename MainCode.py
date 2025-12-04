@@ -164,7 +164,7 @@ def main():
             Anos = [2025, 2026, 2027, 2028, 2029]
             Demandas =[]
             for ano in Anos:
-                Demandas.append(st.number_input("Demanda esperada no ano de,"str(ano)))
+                Demandas.append(st.number_input("Demanda esperada no ano de "))
             st.title("📋 Opções de Expansão de Capacidade")
             st.markdown("""
             ### 🏭 **Turno extra**
