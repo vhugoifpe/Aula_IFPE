@@ -103,6 +103,22 @@ def main():
         )
         pesos[criterio] = peso
         total += peso
+
+    st.divider()
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Soma Total", f"{total}%")
+    with col2:
+        if total == 100:
+            st.success("✅ Soma correta!")
+        elif total < 100:
+            st.warning(f"⚠️ Faltam {100-total}%")
+        else:
+            st.error(f"❌ Excesso de {total-100}%")
+    with col3:
+        if total != 100:
+            st.button("🔁 Redistribuir Automaticamente", 
+                     help="Distribui igualmente os pesos restantes")
                 
     if choice == menu[6]:
         st.header(menu[6])
