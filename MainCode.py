@@ -3,6 +3,7 @@ import numpy as np
 import sys
 from streamlit import cli as stcli
 from PIL import Image
+import pandas as pd
 
 def main():
     #criando 3 colunas
@@ -74,7 +75,6 @@ def main():
 
     st.subheader("Defina os pesos dos critérios competitivos (Total deve somar 100%)")
 
-    # Critérios com descrições
     criterios = {
         "Custo": "Importância do custo na competitividade",
         "Qualidade": "Importância da qualidade na competitividade",
@@ -94,7 +94,7 @@ def main():
             f"Peso de {criterio} (%)",
             min_value=0,
             max_value=100,
-            value=15 if i == 0 else 14,  # Valores iniciais distribuídos
+            value=15 if i == 0 else 14, 
             step=1,
             help=ajuda,
             key=f"peso_{criterio}"
@@ -108,10 +108,6 @@ def main():
     st.subheader("Resultados da Simulação")
     
     if total == 100:
-    
-        # ----------------------------------------------------
-        # Conversão das categorias qualitativas em valores 0–1
-        # ----------------------------------------------------
     
         mapa_escala = {
             "Baixo": 0.2, "Baixo/Médio": 0.35, "Médio": 0.5,
@@ -137,67 +133,6 @@ def main():
             "Capacidade": mapa_escala[Cap],
             "Previsão de Demanda": mapa_escala[Prev]
         }
-    
-        # ----------------------------------------------------
-        # Simulando Concorrência
-        # ----------------------------------------------------
-        # Vai simular 500 cenários possíveis para cada critério
-    
-        resultados_concorrencia = {}
-    
-        idx = 0
-        for criterio in criterios.keys():
-            # Recuperar média e desvio daquele critério
-            slider_media = st.session_state.get(list(st.session_state.keys())[idx*2 + 0])
-            slider_dp    = st.session_state.get(list(st.session_state.keys())[idx*2 + 1])
-            idx += 1
-    
-            # Simulação Monte Carlo
-            sim = np.random.normal(slider_media, slider_dp, 500)
-    
-            # Corrigir limites (0–1)
-            sim = np.clip(sim, 0, 1)
-    
-            resultados_concorrencia[criterio] = sim.mean()
-    
-        # ----------------------------------------------------
-        # Comparação ponderada
-        # ----------------------------------------------------
-    
-        score_empresa = 0
-        score_concorrencia = 0
-    
-        for criterio in criterios.keys():
-            peso = pesos[criterio] / 100
-            score_empresa += desempenho_empresa[criterio] * peso
-            score_concorrencia += resultados_concorrencia[criterio] * peso
-    
-        # ----------------------------------------------------
-        # Resultado Final
-        # ----------------------------------------------------
-    
-        df_resultado = pd.DataFrame({
-            "Critério": list(criterios.keys()),
-            "Empresa": [desempenho_empresa[c] for c in criterios.keys()],
-            "Concorrência (simulada)": [resultados_concorrencia[c] for c in criterios.keys()],
-            "Peso (%)": [pesos[c] for c in criterios.keys()]
-        })
-    
-        st.dataframe(df_resultado, use_container_width=True)
-    
-        st.markdown("## 🧮 **Desempenho Global Ponderado**")
-        colA, colB = st.columns(2)
-    
-        with colA:
-            st.metric("Score da Empresa", f"{score_empresa:.3f}")
-        with colB:
-            st.metric("Score da Concorrência", f"{score_concorrencia:.3f}")
-    
-        if score_empresa > score_concorrencia:
-            st.success("🏆 A empresa está competitiva frente à concorrência!")
-        else:
-            st.error("⚠️ A concorrência supera sua empresa — reveja a estratégia.")
-
                 
     if choice == menu[6]:
         st.header(menu[6])
