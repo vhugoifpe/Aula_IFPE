@@ -166,7 +166,6 @@ def main():
             Demandas = {}
             for ano in Anos:
                 col1, col2 = st.columns(2)
-                
                 with col1:
                     media = st.number_input(
                         f"Média - {ano}",
@@ -177,7 +176,6 @@ def main():
                         help=f"Demanda média esperada para {ano}",
                         key=f"media_{ano}"
                     )
-                
                 with col2:
                     erro = st.number_input(
                         f"Erro/Margem - {ano}",
@@ -188,35 +186,29 @@ def main():
                         help=f"Margem de erro para {ano} (±)",
                         key=f"erro_{ano}"
                     )
-                
                 Demandas[ano-2025] = {
                     'media': media,
                     'erro': erro,
                     'min': max(0, media - erro),  # Não pode ser negativo
                     'max': media + erro
                 }
-    
             st.title("📋 Opções de Expansão de Capacidade")
-    
             st.markdown("""
             ### 🏭 **Turno extra**
             - **Custo fixo:** R$ 120.000/mês
             - **Custo variável:** ↑ 15% mão de obra
             - **Impacto:** +25% capacidade
             - **Tempo de implantação:** imediato
-            
             ### 🏗️ **Nova máquina**
             - **Custo fixo:** R$ 900.000
             - **Custo variável:** +R$ 0,30/unidade
             - **Impacto:** +40% capacidade
             - **Tempo de implantação:** 6 meses
-            
             ### 🤖 **Automação**
             - **Custo fixo:** R$ 1.500.000
             - **Custo variável:** reduz 20% MO
             - **Impacto:** +20% capacidade + +10% eficiência
             - **Tempo de implantação:** 1 ano
-            
             ### 📦 **Terceirização**
             - **Custo fixo:** sem custo fixo
             - **Custo variável:** R$ 4/unidade
@@ -224,7 +216,6 @@ def main():
             - **Tempo de implantação:** imediato
             """)
             st.subheader("Planeje as ações para cada início de ano:")
-    
             opcoes = {
                 "Nada": {
                     "descricao": "Manter operação atual",
@@ -262,15 +253,10 @@ def main():
                     "tempo": "imediato"
                 }
             }
-    
-    
-            # Dicionário para armazenar as decisões
-            decisoes_anuais = {}
             
+            decisoes_anuais = {}
             for ano in Anos:
                 st.markdown(f"### 🗓️ Início de {ano}")
-                
-                # Selectbox para escolher a ação
                 acao_selecionada = st.selectbox(
                     f"O que fazer em {ano}?",
                     options=list(opcoes.keys()),
@@ -285,15 +271,13 @@ def main():
                 }
                     
                         
-            def simular_lucro(Capacidade, Eficiencia, Penalidade, Demandas, decisoes_anuais, 
-                              preco_venda, custo_variavel_base, custo_fixo_mensal, taxa_juros):
-                capacidade_atual = Capacidade  # unid/mês
+            def simular_lucro(Capacidade, Eficiencia, Penalidade, Demandas, decisoes_anuais, preco_venda, custo_variavel_base, custo_fixo_mensal, taxa_juros):
+                capacidade_atual = Capacidade  
                 eficiencia_atual = Eficiencia
                 custo_variavel_atual = custo_variavel_base  # R$/unidade
                 custo_fixo_atual = custo_fixo_mensal  # R$/mês
                 
-                investimentos_pendentes = {}  # {ano_mes: [impactos a serem aplicados]}
-                
+                investimentos_pendentes = {}
                 resultados = []
                 lucro_acumulado = 0
                 fluxo_caixa_anual = []
@@ -306,7 +290,6 @@ def main():
                         for key in list(investimentos_pendentes.keys()):
                             if key <= ano: 
                                 impacto = investimentos_pendentes.pop(key)
-                                
                                 if impacto['tipo'] == "Nova máquina":
                                     capacidade_atual *= (1 + 0.40)  # +40% capacidade
                                     custo_variavel_atual += 0.30  # +R$0,30/unidade
@@ -314,19 +297,15 @@ def main():
                                     capacidade_atual *= (1 + 0.20)  # +20% capacidade
                                     eficiencia_atual = min(1.0, eficiencia_atual + 0.10)  # +10% eficiência
                                     custo_variavel_atual *= (1 - 0.20)  # -20% custo variável
-                    
                     if detalhes['tempo_meses'] == 0:
                         if decisao['acao'] == "Turno extra":
                             custo_fixo_atual += detalhes['custo_fixo']  # +R$120.000/mês
                             custo_variavel_atual *= (1 + detalhes['custo_variavel'])  # +15%
                             capacidade_atual *= (1 + detalhes['impacto_capacidade'])  # +25%
-                        
                         elif decisao['acao'] == "Terceirização":
                             pass  # Será tratado no cálculo de produção
-                        
                         elif decisao['acao'] == "Nada":
                             pass  # Nenhuma alteração
-                        
                         elif decisao['acao'] in ["Nova máquina", "Automação"]:
                             # Esses têm tempo de implantação, então adicionar à lista de pendentes
                             mes_implantacao = ano + (detalhes['tempo_meses'] / 12)
@@ -334,14 +313,10 @@ def main():
                                 'tipo': decisao['acao'],
                                 'custo': detalhes['custo_fixo']
                             }
-
                     capacidade_anual_efetiva = capacidade_atual * 12 * eficiencia_atual
-                    
                     if decisao['acao'] == "Terceirização":
                         capacidade_anual_efetiva = float('inf')
-                    
                     demanda_media = Demandas[i]['media']
-                    
                     if capacidade_anual_efetiva >= demanda_media:
                         producao_real = demanda_media
                         unidades_nao_atendidas = 0
@@ -350,22 +325,17 @@ def main():
                         producao_real = capacidade_anual_efetiva
                         unidades_nao_atendidas = demanda_media - capacidade_anual_efetiva
                         capacidade_ociosa = 0
-                    
                     receita = producao_real * preco_venda
-                    
                     if decisao['acao'] == "Terceirização":
                         custo_var_total = producao_real * detalhes['custo_terceirizacao']
                     else:
                         custo_var_total = producao_real * custo_variavel_atual
                     
                     custo_fixo_anual = custo_fixo_atual * 12
-                    
                     custo_penalidade = unidades_nao_atendidas * Penalidade
-                    
                     custo_investimento = 0
                     if detalhes['tempo_meses'] == 0 and decisao['acao'] in ["Nova máquina", "Automação"]:
                         custo_investimento = detalhes['custo_fixo']
-                    
                     lucro_anual = receita - custo_var_total - custo_fixo_anual - custo_penalidade - custo_investimento
                     
                     resultados.append({
@@ -385,7 +355,6 @@ def main():
                     
                     fluxo_caixa_anual.append(lucro_anual)
                     lucro_acumulado += lucro_anual
-                
                 vpl = 0
                 for t, fluxo in enumerate(fluxo_caixa_anual):
                     vpl += fluxo / ((1 + taxa_juros) ** t)
@@ -393,10 +362,7 @@ def main():
                 return resultados, lucro_acumulado, vpl
                 
             st.header("📊 Resultados da Simulação")
-            
-            with st.spinner("Calculando resultados..."):
-                #resultados, lucro_total = simular_lucro_simples(Capacidade, Eficiencia, Penalidade, Demandas, decisoes_anuais)
-                st.success(f"Lucro Total: R$ {lucro_total:,.2f}")
+                simular_lucro_simples(Capacidade, Eficiencia, Penalidade, Demandas, decisoes_anuais)
 #################################################################################################################################################################################
 #################################################################################################################################################################################
 #################################################################################################################################################################################
