@@ -172,9 +172,7 @@ def main():
                         value=valor_padrao,
                         step=100,
                         help=f"Demanda esperada para {ano}",
-                        key=f"demanda_{ano}",
-                        label_visibility="collapsed"
-                    )
+                        key=f"demanda_{ano}")
                     Demandas.append(demanda)
             st.title("📋 Opções de Expansão de Capacidade")
             st.markdown("""
