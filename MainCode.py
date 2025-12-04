@@ -2,8 +2,6 @@ import streamlit as st
 import numpy as np
 import sys
 from streamlit import cli as stcli
-from scipy.integrate import quad #Single integral
-from scipy.integrate import dblquad
 from PIL import Image
 
 def main():
@@ -106,6 +104,100 @@ def main():
 
     if total!=100:
         st.error(f"❌ Excesso de {total-100}%")
+
+    st.subheader("Resultados da Simulação")
+    
+    if total == 100:
+    
+        # ----------------------------------------------------
+        # Conversão das categorias qualitativas em valores 0–1
+        # ----------------------------------------------------
+    
+        mapa_escala = {
+            "Baixo": 0.2, "Baixo/Médio": 0.35, "Médio": 0.5,
+            "Médio/Alto": 0.65, "Alto": 0.8,
+    
+            "Baixa": 0.2, "Média": 0.5, "Alta": 0.8,
+    
+            "Lenta": 0.2, "Média": 0.5, "Rápida": 0.8,
+    
+            "Tradicional": 0.3, "Média": 0.5, "Inovativa": 0.9,
+    
+            "No Limite": 0.3, "Próxima ao Limite": 0.5, "Com Folga": 0.8,
+    
+            "Pouco Precisa": 0.3, "Erros Aceitáveis": 0.5, "Precisa": 0.85
+        }
+    
+        desempenho_empresa = {
+            "Custo": mapa_escala[Custo],
+            "Qualidade": mapa_escala[Qual],
+            "Flexibilidade": mapa_escala[Flex],
+            "Entrega": mapa_escala[Entrega],
+            "Inovação Tecnológica": mapa_escala[Inov],
+            "Capacidade": mapa_escala[Cap],
+            "Previsão de Demanda": mapa_escala[Prev]
+        }
+    
+        # ----------------------------------------------------
+        # Simulando Concorrência
+        # ----------------------------------------------------
+        # Vai simular 500 cenários possíveis para cada critério
+    
+        resultados_concorrencia = {}
+    
+        idx = 0
+        for criterio in criterios.keys():
+            # Recuperar média e desvio daquele critério
+            slider_media = st.session_state.get(list(st.session_state.keys())[idx*2 + 0])
+            slider_dp    = st.session_state.get(list(st.session_state.keys())[idx*2 + 1])
+            idx += 1
+    
+            # Simulação Monte Carlo
+            sim = np.random.normal(slider_media, slider_dp, 500)
+    
+            # Corrigir limites (0–1)
+            sim = np.clip(sim, 0, 1)
+    
+            resultados_concorrencia[criterio] = sim.mean()
+    
+        # ----------------------------------------------------
+        # Comparação ponderada
+        # ----------------------------------------------------
+    
+        score_empresa = 0
+        score_concorrencia = 0
+    
+        for criterio in criterios.keys():
+            peso = pesos[criterio] / 100
+            score_empresa += desempenho_empresa[criterio] * peso
+            score_concorrencia += resultados_concorrencia[criterio] * peso
+    
+        # ----------------------------------------------------
+        # Resultado Final
+        # ----------------------------------------------------
+    
+        df_resultado = pd.DataFrame({
+            "Critério": list(criterios.keys()),
+            "Empresa": [desempenho_empresa[c] for c in criterios.keys()],
+            "Concorrência (simulada)": [resultados_concorrencia[c] for c in criterios.keys()],
+            "Peso (%)": [pesos[c] for c in criterios.keys()]
+        })
+    
+        st.dataframe(df_resultado, use_container_width=True)
+    
+        st.markdown("## 🧮 **Desempenho Global Ponderado**")
+        colA, colB = st.columns(2)
+    
+        with colA:
+            st.metric("Score da Empresa", f"{score_empresa:.3f}")
+        with colB:
+            st.metric("Score da Concorrência", f"{score_concorrencia:.3f}")
+    
+        if score_empresa > score_concorrencia:
+            st.success("🏆 A empresa está competitiva frente à concorrência!")
+        else:
+            st.error("⚠️ A concorrência supera sua empresa — reveja a estratégia.")
+
                 
     if choice == menu[6]:
         st.header(menu[6])
