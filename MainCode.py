@@ -294,7 +294,7 @@ def main():
                                 capacidade_atual *= (1 + 0.20)  # +20% capacidade
                                 eficiencia_atual = min(1.0, eficiencia_atual + 0.10)  # +10% eficiência
                                 custo_variavel_atual *= (1 - 0.20)  # -20% custo variável
-                if detalhes['tempo_meses'] == 0:
+                if detalhes['tempo'] == 0:
                     if decisao['acao'] == "Turno extra":
                         custo_fixo_atual += detalhes['custo_fixo']  # +R$120.000/mês
                         custo_variavel_atual *= (1 + detalhes['custo_variavel'])  # +15%
@@ -333,21 +333,6 @@ def main():
                 if detalhes['tempo_meses'] == 0 and decisao['acao'] in ["Nova máquina", "Automação"]:
                     custo_investimento = detalhes['custo_fixo']
                 lucro_anual = receita - custo_var_total - custo_fixo_anual - custo_penalidade - custo_investimento
-                
-                resultados.append({
-                    'Ano': ano,
-                    'Capacidade': capacidade_atual,
-                    'Eficiência': eficiencia_atual,
-                    'Demanda': demanda_media,
-                    'Produção': producao_real,
-                    'Receita': receita,
-                    'Custo Variável': custo_var_total,
-                    'Custo Fixo': custo_fixo_anual,
-                    'Penalidade': custo_penalidade,
-                    'Investimento': custo_investimento,
-                    'Lucro Anual': lucro_anual,
-                    'Decisão': decisao['acao']
-                })
                 
                 fluxo_caixa_anual.append(lucro_anual)
                 lucro_acumulado += lucro_anual
