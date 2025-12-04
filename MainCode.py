@@ -133,6 +133,52 @@ def main():
             "Capacidade": mapa_escala[Cap],
             "Previsão de Demanda": mapa_escala[Prev]
         }
+    resultados_concorrencia = {}
+    
+    idx = 0
+    for criterio in criterios.keys():
+        slider_media = st.session_state.get(list(st.session_state.keys())[idx*2 + 0])
+        slider_dp    = st.session_state.get(list(st.session_state.keys())[idx*2 + 1])
+        idx += 1
+
+        sim = np.random.normal(slider_media, slider_dp, 500)
+
+        sim = np.clip(sim, 0, 1)
+
+        resultados_concorrencia[criterio] = sim.mean()
+
+    # ----------------------------------------------------
+    # Comparação ponderada
+    # ----------------------------------------------------
+
+    score_empresa = 0
+    score_concorrencia = 0
+
+    for criterio in criterios.keys():
+        peso = pesos[criterio] / 100
+        score_empresa += desempenho_empresa[criterio] * peso
+        score_concorrencia += resultados_concorrencia[criterio] * peso
+
+    # ----------------------------------------------------
+    # Resultado Final
+    # ----------------------------------------------------
+
+    df_resultado = pd.DataFrame({
+        "Critério": list(criterios.keys()),
+        "Empresa": [desempenho_empresa[c] for c in criterios.keys()],
+        "Concorrência (simulada)": [resultados_concorrencia[c] for c in criterios.keys()],
+        "Peso (%)": [pesos[c] for c in criterios.keys()]
+    })
+
+    st.dataframe(df_resultado, use_container_width=True)
+
+    st.markdown("## 🧮 **Desempenho Global Ponderado**")
+    colA, colB = st.columns(2)
+
+    with colA:
+        st.metric("Score da Empresa", f"{score_empresa:.3f}")
+    with colB:
+        st.metric("Score da Concorrência", f"{score_concorrencia:.3f}")
                 
     if choice == menu[6]:
         st.header(menu[6])
