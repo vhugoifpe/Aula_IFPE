@@ -47,138 +47,130 @@ def main():
         'Inovação Tecnológica': "Nível de inovação da concorrência",
         'Capacidade': "Nível de capacidade da concorrência",
         'Previsão de Demanda': "Nível de previsão da concorrência"
-    }
-    
-    cenario = {}
-    
-    for criterio, help_text in critérios.items():
-        with st.expander(f"⚙️ {criterio}", expanded=False):
-            col1, col2 = st.columns(2)
-            with col1:
-                media = st.slider(
-                    f"Média",
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=0.5,
-                    step=0.01,
-                    help=f"{help_text} - Média"
-                )
-            with col2:
-                desvio_padrao = st.slider(
-                    f"Desvio-padrão",
-                    min_value=0.0,
-                    max_value=0.5,
-                    value=0.1,
-                    step=0.01,
-                    help=f"{help_text} - Desvio-padrão"
-                )
-
-    st.subheader("Defina os pesos dos critérios competitivos (Total deve somar 100%)")
-
-    criterios = {
-        "Custo": "Importância do custo na competitividade",
-        "Qualidade": "Importância da qualidade na competitividade",
-        "Flexibilidade": "Importância da flexibilidade na competitividade",
-        "Entrega": "Importância da entrega na competitividade",
-        "Inovação Tecnológica": "Importância da inovação na competitividade",
-        "Capacidade": "Importância da capacidade na competitividade",
-        "Previsão de Demanda": "Importância da previsão na competitividade"
-    }
-    
-    pesos = {}
-    total = 0
-    
-    st.markdown("### Ajuste os pesos:")
-    for i, (criterio, ajuda) in enumerate(criterios.items()):
-        peso = st.slider(
-            f"Peso de {criterio} (%)",
-            min_value=0,
-            max_value=100,
-            value=15 if i == 0 else 14, 
-            step=1,
-            help=ajuda,
-            key=f"peso_{criterio}"
-        )
-        pesos[criterio] = peso
-        total += peso
-
-    if total!=100:
-        st.error(f"❌ Excesso de {total-100}%")
-
-    st.subheader("Resultados da Simulação")
-    
-    if total == 100:
-    
-        mapa_escala = {
-            "Baixo": 0.2, "Baixo/Médio": 0.35, "Médio": 0.5,
-            "Médio/Alto": 0.65, "Alto": 0.8,
-    
-            "Baixa": 0.2, "Média": 0.5, "Alta": 0.8,
-    
-            "Lenta": 0.2, "Média": 0.5, "Rápida": 0.8,
-    
-            "Tradicional": 0.3, "Média": 0.5, "Inovativa": 0.9,
-    
-            "No Limite": 0.3, "Próxima ao Limite": 0.5, "Com Folga": 0.8,
-    
-            "Pouco Precisa": 0.3, "Erros Aceitáveis": 0.5, "Precisa": 0.85
         }
+        
+        cenario = {}
     
-        desempenho_empresa = {
-            "Custo": mapa_escala[Custo],
-            "Qualidade": mapa_escala[Qual],
-            "Flexibilidade": mapa_escala[Flex],
-            "Entrega": mapa_escala[Entrega],
-            "Inovação Tecnológica": mapa_escala[Inov],
-            "Capacidade": mapa_escala[Cap],
-            "Previsão de Demanda": mapa_escala[Prev]
+        medias=[]
+        dev=[]
+        
+        for criterio, help_text in critérios.items():
+            with st.expander(f"⚙️ {criterio}", expanded=False):
+                col1, col2 = st.columns(2)
+                with col1:
+                    media = st.slider(
+                        f"Média",
+                        min_value=0.0,
+                        max_value=1.0,
+                        value=0.5,
+                        step=0.01,
+                        help=f"{help_text} - Média"
+                    )
+                with col2:
+                    desvio_padrao = st.slider(
+                        f"Desvio-padrão",
+                        min_value=0.0,
+                        max_value=0.5,
+                        value=0.1,
+                        step=0.01,
+                        help=f"{help_text} - Desvio-padrão"
+                    )
+            medias.append(media)
+            dev.append(desvio_padrao)
+        st.subheader("Defina os pesos dos critérios competitivos (Total deve somar 100%)")
+    
+        criterios = {
+            "Custo": "Importância do custo na competitividade",
+            "Qualidade": "Importância da qualidade na competitividade",
+            "Flexibilidade": "Importância da flexibilidade na competitividade",
+            "Entrega": "Importância da entrega na competitividade",
+            "Inovação Tecnológica": "Importância da inovação na competitividade",
+            "Capacidade": "Importância da capacidade na competitividade",
+            "Previsão de Demanda": "Importância da previsão na competitividade"
         }
-    resultados_concorrencia = {}
+        
+        pesos = {}
+        total = 0
+        
+        st.markdown("### Ajuste os pesos:")
+        for i, (criterio, ajuda) in enumerate(criterios.items()):
+            peso = st.slider(
+                f"Peso de {criterio} (%)",
+                min_value=0,
+                max_value=100,
+                value=15 if i == 0 else 14, 
+                step=1,
+                help=ajuda,
+                key=f"peso_{criterio}"
+            )
+            pesos[criterio] = peso
+            total += peso
     
-    idx = 0
-    for criterio in criterios.keys():
-        slider_media = st.session_state.get(list(st.session_state.keys())[idx*2 + 0])
-        slider_dp    = st.session_state.get(list(st.session_state.keys())[idx*2 + 1])
-        idx += 1
+        if total!=100:
+            st.error(f"❌ Excesso de {total-100}%")
+    
+        st.subheader("Resultados da Simulação")
+        
+        if total == 100:
+        
+            mapa_escala = {
+                "Baixo": 0.2, "Baixo/Médio": 0.35, "Médio": 0.5,
+                "Médio/Alto": 0.65, "Alto": 0.8,
+        
+                "Baixa": 0.2, "Média": 0.5, "Alta": 0.8,
+        
+                "Lenta": 0.2, "Média": 0.5, "Rápida": 0.8,
+        
+                "Tradicional": 0.3, "Média": 0.5, "Inovativa": 0.9,
+        
+                "No Limite": 0.3, "Próxima ao Limite": 0.5, "Com Folga": 0.8,
+        
+                "Pouco Precisa": 0.3, "Erros Aceitáveis": 0.5, "Precisa": 0.85
+            }
+        
+            desempenho_empresa = {
+                "Custo": mapa_escala[Custo],
+                "Qualidade": mapa_escala[Qual],
+                "Flexibilidade": mapa_escala[Flex],
+                "Entrega": mapa_escala[Entrega],
+                "Inovação Tecnológica": mapa_escala[Inov],
+                "Capacidade": mapa_escala[Cap],
+                "Previsão de Demanda": mapa_escala[Prev]
+            }
+        resultados_concorrencia = {}
 
-        sim = np.random.normal(slider_media, slider_dp, 500)
-
-        sim = np.clip(sim, 0, 1)
-
-        resultados_concorrencia[criterio] = sim.mean()
-
-    # ----------------------------------------------------
-    # Comparação ponderada
-    # ----------------------------------------------------
-
-    score_empresa = 0
-    score_concorrencia = 0
-
-    for criterio in criterios.keys():
-        peso = pesos[criterio] / 100
-        score_empresa += desempenho_empresa[criterio] * peso
-        score_concorrencia += resultados_concorrencia[criterio] * peso
-
-    # ----------------------------------------------------
-    # Resultado Final
-    # ----------------------------------------------------
-
-    df_resultado = pd.DataFrame({
-        "Critério": list(criterios.keys()),
-        "Empresa": [desempenho_empresa[c] for c in criterios.keys()],
-        "Concorrência (simulada)": [resultados_concorrencia[c] for c in criterios.keys()],
-        "Peso (%)": [pesos[c] for c in criterios.keys()]
-    })
-
-    st.dataframe(df_resultado, use_container_width=True)
-
-    st.markdown("## 🧮 **Desempenho Global Ponderado**")
-    colA, colB = st.columns(2)
-
-    with colA:
-        st.metric("Score da Empresa", f"{score_empresa:.3f}")
-    with colB:
-        st.metric("Score da Concorrência", f"{score_concorrencia:.3f}")
+        idx=0
+        for criterio in criterios.keys():
+            sim = np.random.normal(medias[idx], dev[idx], 500)
+            idx+=1
+            sim = np.clip(sim, 0, 1)
+    
+            resultados_concorrencia[criterio] = sim.mean()
+    
+        score_empresa = 0
+        score_concorrencia = 0
+    
+        for criterio in criterios.keys():
+            peso = pesos[criterio] / 100
+            score_empresa += desempenho_empresa[criterio] * peso
+            score_concorrencia += resultados_concorrencia[criterio] * peso
+    
+        df_resultado = pd.DataFrame({
+            "Critério": list(criterios.keys()),
+            "Empresa": [desempenho_empresa[c] for c in criterios.keys()],
+            "Concorrência (simulada)": [resultados_concorrencia[c] for c in criterios.keys()],
+            "Peso (%)": [pesos[c] for c in criterios.keys()]
+        })
+    
+        st.dataframe(df_resultado, use_container_width=True)
+    
+        st.markdown("## 🧮 **Desempenho Global Ponderado**")
+        colA, colB = st.columns(2)
+    
+        with colA:
+            st.metric("Score da Empresa", f"{score_empresa:.3f}")
+        with colB:
+            st.metric("Score da Concorrência", f"{score_concorrencia:.3f}")
                 
     if choice == menu[6]:
         st.header(menu[6])
