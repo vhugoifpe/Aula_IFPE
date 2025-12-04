@@ -161,10 +161,10 @@ def main():
             preco_venda = st.number_input("Preço de venda por unidade (R$)", min_value=0.0, value=25.0, step=0.5, help="Preço que você vende cada unidade")
             custo_variavel_base = st.number_input("Custo variável base por unidade (R$)", min_value=0.0, value=8.0, step=0.5, help="Custo variável atual por unidade produzida")
             custo_fixo_mensal = st.number_input("Custo fixo mensal atual (R$/mês)", min_value=0.0, value=50000.0, step=1000.0, help="Custos fixos mensais atuais")
-            Anos = [2025, 2026, 2027, 2028, 2029]
-            valores_padrao = [1000, 800, 900, 1000, 1000]
+            Anos = [2025, 2026, 2027, 2028]
+            valores_padrao = [1000, 800, 900, 1000]
             Demandas = []
-            for i, (col, ano, valor_padrao) in enumerate(zip(st.columns(5), Anos, valores_padrao)):
+            for i, (col, ano, valor_padrao) in enumerate(zip(st.columns(4), Anos, valores_padrao)):
                 with col:
                     demanda = st.number_input(
                         f"{ano}", 
@@ -172,7 +172,8 @@ def main():
                         value=valor_padrao,
                         step=100,
                         help=f"Demanda esperada para {ano}",
-                        key=f"demanda_{ano}"
+                        key=f"demanda_{ano}",
+                        label_visibility="collapsed"
                     )
                     Demandas.append(demanda)
             st.title("📋 Opções de Expansão de Capacidade")
