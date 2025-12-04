@@ -278,7 +278,7 @@ def main():
             investimentos_pendentes = {}
             lucro_acumulado = 0
             fluxo_caixa_anual = []
-            for i, ano in range(0,len(Anos),1):
+            for i, ano in enumerate(Anos):
                 st.write(i)
                 decisao = decisoes_anuais[ano]
                 detalhes = decisao['detalhes']
