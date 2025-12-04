@@ -279,15 +279,12 @@ def main():
                 capacidade_anual_efetiva = capacidade_atual * 12 * eficiencia_atual
                 if decisao['acao'] == "Terceirização":
                     capacidade_anual_efetiva = float('inf')
-                demanda_media = Demandas[i]['media']
-                if capacidade_anual_efetiva >= demanda_media:
-                    producao_real = demanda_media
+                if capacidade_anual_efetiva >= Demandas[i]:
+                    producao_real = Demandas[i]
                     unidades_nao_atendidas = 0
-                    capacidade_ociosa = capacidade_anual_efetiva - demanda_media
                 else:
                     producao_real = capacidade_anual_efetiva
-                    unidades_nao_atendidas = demanda_media - capacidade_anual_efetiva
-                    capacidade_ociosa = 0
+                    unidades_nao_atendidas = Demandas[i] - capacidade_anual_efetiva
                 receita = producao_real * preco_venda
                 if decisao['acao'] == "Terceirização":
                     custo_var_total = producao_real * detalhes['custo_terceirizacao']
@@ -300,8 +297,6 @@ def main():
                 if detalhes['tempo'] == 0 and decisao['acao'] in ["Nova máquina", "Automação"]:
                     custo_investimento = detalhes['custo_fixo']
                 lucro_anual = receita - custo_var_total - custo_fixo_anual - custo_penalidade - custo_investimento
-                
-                fluxo_caixa_anual.append(lucro_anual)
                 lucro_acumulado += lucro_anual
                                 
             st.header("📊 Resultados da Simulação")
