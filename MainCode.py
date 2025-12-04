@@ -409,19 +409,20 @@ def main():
                     vpl += fluxo / ((1 + taxa_juros) ** t)
                 
                 return resultados, lucro_acumulado, vpl
-            
-        if choice == menu[6]:
-            st.header(menu[6])
-            st.write("<h6 style='text-align: justify; color: Blue Jay;'>Estes aplicativos são referente à aula do dia 13/12/2025.</h6>", unsafe_allow_html=True)
-            st.write("<h6 style='text-align: justify; color: Blue Jay;'>Para mais informações, dúvidas e sugestões, por favor contacte nos e-mails abaixo:</h6>", unsafe_allow_html=True)
-            
-            st.write('''
-    
-    victor.lima@ifpe.edu.br
-    
-    vhugoreslim@gmail.com
-    
-    ''' .format(chr(948), chr(948), chr(948), chr(948), chr(948)))       
+        else:    
+        
+            if choice == menu[6]:
+                st.header(menu[6])
+                st.write("<h6 style='text-align: justify; color: Blue Jay;'>Estes aplicativos são referente à aula do dia 13/12/2025.</h6>", unsafe_allow_html=True)
+                st.write("<h6 style='text-align: justify; color: Blue Jay;'>Para mais informações, dúvidas e sugestões, por favor contacte nos e-mails abaixo:</h6>", unsafe_allow_html=True)
+                
+                st.write('''
+        
+        victor.lima@ifpe.edu.br
+        
+        vhugoreslim@gmail.com
+        
+        ''' .format(chr(948), chr(948), chr(948), chr(948), chr(948)))       
 if st._is_running_with_streamlit:
     main()
 else:
