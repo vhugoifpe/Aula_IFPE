@@ -269,81 +269,79 @@ def main():
                     'acao': acao_selecionada,
                     'detalhes': opcoes[acao_selecionada]
                 }
-            def Sim():
-                global Capacidade, Eficiencia, custo_variavel_base, custo_fixo_mensal, decisoes_anuais, preco_venda, taxa_juros
-                capacidade_atual = Capacidade 
-                eficiencia_atual = Eficiencia
-                custo_variavel_atual = custo_variavel_base 
-                custo_fixo_atual = custo_fixo_mensal 
                 
-                investimentos_pendentes = {}
-                lucro_acumulado = 0
-                fluxo_caixa_anual = []
-                for i, ano in enumerate(Anos):
-                    decisao = decisoes_anuais[ano]
-                    detalhes = decisao['detalhes']
-                    
-                    if investimentos_pendentes:
-                        for key in list(investimentos_pendentes.keys()):
-                            if key <= ano: 
-                                impacto = investimentos_pendentes.pop(key)
-                                if impacto['tipo'] == "Nova máquina":
-                                    capacidade_atual *= (1 + 0.40)  # +40% capacidade
-                                    custo_variavel_atual += 0.30  # +R$0,30/unidade
-                                elif impacto['tipo'] == "Automação":
-                                    capacidade_atual *= (1 + 0.20)  # +20% capacidade
-                                    eficiencia_atual = min(1.0, eficiencia_atual + 0.10)  # +10% eficiência
-                                    custo_variavel_atual *= (1 - 0.20)  # -20% custo variável
-                    if detalhes['tempo'] == 0:
-                        if decisao['acao'] == "Turno extra":
-                            custo_fixo_atual += detalhes['custo_fixo']  # +R$120.000/mês
-                            custo_variavel_atual *= (1 + detalhes['custo_variavel'])  # +15%
-                            capacidade_atual *= (1 + detalhes['impacto_capacidade'])  # +25%
-                        elif decisao['acao'] == "Terceirização":
-                            pass  # Será tratado no cálculo de produção
-                        elif decisao['acao'] == "Nada":
-                            pass  # Nenhuma alteração
-                        elif decisao['acao'] in ["Nova máquina", "Automação"]:
-                            mes_implantacao = ano + (detalhes['tempo'] / 12)
-                            investimentos_pendentes[mes_implantacao] = {
-                                'tipo': decisao['acao'],
-                                'custo': detalhes['custo_fixo']
-                            }
-                    capacidade_anual_efetiva = capacidade_atual * 12 * eficiencia_atual
-                    if decisao['acao'] == "Terceirização":
-                        capacidade_anual_efetiva = float('inf')
-                    demanda_media = Demandas[i]['media']
-                    if capacidade_anual_efetiva >= demanda_media:
-                        producao_real = demanda_media
-                        unidades_nao_atendidas = 0
-                        capacidade_ociosa = capacidade_anual_efetiva - demanda_media
-                    else:
-                        producao_real = capacidade_anual_efetiva
-                        unidades_nao_atendidas = demanda_media - capacidade_anual_efetiva
-                        capacidade_ociosa = 0
-                    receita = producao_real * preco_venda
-                    if decisao['acao'] == "Terceirização":
-                        custo_var_total = producao_real * detalhes['custo_terceirizacao']
-                    else:
-                        custo_var_total = producao_real * custo_variavel_atual
-                    
-                    custo_fixo_anual = custo_fixo_atual * 12
-                    custo_penalidade = unidades_nao_atendidas * Penalidade
-                    custo_investimento = 0
-                    if detalhes['tempo'] == 0 and decisao['acao'] in ["Nova máquina", "Automação"]:
-                        custo_investimento = detalhes['custo_fixo']
-                    lucro_anual = receita - custo_var_total - custo_fixo_anual - custo_penalidade - custo_investimento
-                    
-                    fluxo_caixa_anual.append(lucro_anual)
-                    lucro_acumulado += lucro_anual
-                vpl = 0
-                for t, fluxo in enumerate(fluxo_caixa_anual):
-                    vpl += fluxo / ((1 + taxa_juros) ** t)
-                return lucro_acumulado
+            capacidade_atual = Capacidade 
+            eficiencia_atual = Eficiencia
+            custo_variavel_atual = custo_variavel_base 
+            custo_fixo_atual = custo_fixo_mensal 
+            
+            investimentos_pendentes = {}
+            lucro_acumulado = 0
+            fluxo_caixa_anual = []
+            for i, ano in enumerate(Anos):
+                decisao = decisoes_anuais[ano]
+                detalhes = decisao['detalhes']
+                
+                if investimentos_pendentes:
+                    for key in list(investimentos_pendentes.keys()):
+                        if key <= ano: 
+                            impacto = investimentos_pendentes.pop(key)
+                            if impacto['tipo'] == "Nova máquina":
+                                capacidade_atual *= (1 + 0.40)  # +40% capacidade
+                                custo_variavel_atual += 0.30  # +R$0,30/unidade
+                            elif impacto['tipo'] == "Automação":
+                                capacidade_atual *= (1 + 0.20)  # +20% capacidade
+                                eficiencia_atual = min(1.0, eficiencia_atual + 0.10)  # +10% eficiência
+                                custo_variavel_atual *= (1 - 0.20)  # -20% custo variável
+                if detalhes['tempo'] == 0:
+                    if decisao['acao'] == "Turno extra":
+                        custo_fixo_atual += detalhes['custo_fixo']  # +R$120.000/mês
+                        custo_variavel_atual *= (1 + detalhes['custo_variavel'])  # +15%
+                        capacidade_atual *= (1 + detalhes['impacto_capacidade'])  # +25%
+                    elif decisao['acao'] == "Terceirização":
+                        pass  # Será tratado no cálculo de produção
+                    elif decisao['acao'] == "Nada":
+                        pass  # Nenhuma alteração
+                    elif decisao['acao'] in ["Nova máquina", "Automação"]:
+                        mes_implantacao = ano + (detalhes['tempo'] / 12)
+                        investimentos_pendentes[mes_implantacao] = {
+                            'tipo': decisao['acao'],
+                            'custo': detalhes['custo_fixo']
+                        }
+                capacidade_anual_efetiva = capacidade_atual * 12 * eficiencia_atual
+                if decisao['acao'] == "Terceirização":
+                    capacidade_anual_efetiva = float('inf')
+                demanda_media = Demandas[i]['media']
+                if capacidade_anual_efetiva >= demanda_media:
+                    producao_real = demanda_media
+                    unidades_nao_atendidas = 0
+                    capacidade_ociosa = capacidade_anual_efetiva - demanda_media
+                else:
+                    producao_real = capacidade_anual_efetiva
+                    unidades_nao_atendidas = demanda_media - capacidade_anual_efetiva
+                    capacidade_ociosa = 0
+                receita = producao_real * preco_venda
+                if decisao['acao'] == "Terceirização":
+                    custo_var_total = producao_real * detalhes['custo_terceirizacao']
+                else:
+                    custo_var_total = producao_real * custo_variavel_atual
+                
+                custo_fixo_anual = custo_fixo_atual * 12
+                custo_penalidade = unidades_nao_atendidas * Penalidade
+                custo_investimento = 0
+                if detalhes['tempo'] == 0 and decisao['acao'] in ["Nova máquina", "Automação"]:
+                    custo_investimento = detalhes['custo_fixo']
+                lucro_anual = receita - custo_var_total - custo_fixo_anual - custo_penalidade - custo_investimento
+                
+                fluxo_caixa_anual.append(lucro_anual)
+                lucro_acumulado += lucro_anual
+            vpl = 0
+            for t, fluxo in enumerate(fluxo_caixa_anual):
+                vpl += fluxo / ((1 + taxa_juros) ** t)
                     
             st.header("📊 Resultados da Simulação")
             if st.button("Simular"):
-                st.write(str(Sim()))
+                st.write(str(lucro_acumulado))
 #################################################################################################################################################################################
 #################################################################################################################################################################################
 #################################################################################################################################################################################
