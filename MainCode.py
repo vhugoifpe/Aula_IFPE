@@ -170,147 +170,288 @@ def main():
         with colB:
             st.metric("Score da Concorrência", f"{score_concorrencia:.3f}")
 
-    if choice == menu[1]:
-        st.subheader("Indique o cenário atual da sua empresa:")
-        
-        Capacidade=st.number_input("Capacidade (unid/mês)", value=40000,help="Selecione o nível de capacidade da sua empresa.")
-        Eficiencia=st.number_input("Eficiência (%)", value=80,help="Selecione o nível de eficiência da sua empresa.")
-        Penalidade=st.number_input("Custo de penalidade por unidade não atendida (R$/unid)", value=7.5,help="Selecione o custo de penlidade.")
-        Anos = [2025, 2026, 2027, 2028, 2029]
-        Demandas = {}
-        for ano in Anos:
-            col1, col2 = st.columns(2)
+    else:
+        if choice == menu[1]:
+            st.subheader("Indique o cenário atual da sua empresa:")
+            Capacidade=st.number_input("Capacidade (unid/mês)", value=40000,help="Selecione o nível de capacidade da sua empresa.")
+            Eficiencia=st.number_input("Eficiência (%)", value=80,help="Selecione o nível de eficiência da sua empresa.")/100
+            Penalidade=st.number_input("Custo de penalidade por unidade não atendida (R$/unid)", value=7.5,help="Selecione o custo de penlidade.")
+            preco_venda = st.number_input("Preço de venda por unidade (R$)", min_value=0.0, value=25.0, step=0.5, help="Preço que você vende cada unidade")
+            custo_variavel_base = st.number_input("Custo variável base por unidade (R$)", min_value=0.0, value=8.0, step=0.5, help="Custo variável atual por unidade produzida")
+            custo_fixo_mensal = st.number_input("Custo fixo mensal atual (R$/mês)", min_value=0.0, value=50000.0, step=1000.0, help="Custos fixos mensais atuais")
+            taxa_juros = st.number_input("Taxa de juros anual para desconto (%)", min_value=0.0, value=10.0, step=0.5, help="Taxa para calcular valor presente dos fluxos") / 100
+            Anos = [2025, 2026, 2027, 2028, 2029]
+            Demandas = {}
+            for ano in Anos:
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    media = st.number_input(
+                        f"Média - {ano}",
+                        min_value=0,
+                        max_value=1000000,
+                        value=1000,
+                        step=100,
+                        help=f"Demanda média esperada para {ano}",
+                        key=f"media_{ano}"
+                    )
+                
+                with col2:
+                    erro = st.number_input(
+                        f"Erro/Margem - {ano}",
+                        min_value=0,
+                        max_value=100000,
+                        value=100,
+                        step=10,
+                        help=f"Margem de erro para {ano} (±)",
+                        key=f"erro_{ano}"
+                    )
+                
+                Demandas[ano-2025] = {
+                    'media': media,
+                    'erro': erro,
+                    'min': max(0, media - erro),  # Não pode ser negativo
+                    'max': media + erro
+                }
+    
+            st.title("📋 Opções de Expansão de Capacidade")
+    
+            st.markdown("""
+            ### 🏭 **Turno extra**
+            - **Custo fixo:** R$ 120.000/mês
+            - **Custo variável:** ↑ 15% mão de obra
+            - **Impacto:** +25% capacidade
+            - **Tempo de implantação:** imediato
             
-            with col1:
-                media = st.number_input(
-                    f"Média - {ano}",
-                    min_value=0,
-                    max_value=1000000,
-                    value=1000,
-                    step=100,
-                    help=f"Demanda média esperada para {ano}",
-                    key=f"media_{ano}"
+            ### 🏗️ **Nova máquina**
+            - **Custo fixo:** R$ 900.000
+            - **Custo variável:** +R$ 0,30/unidade
+            - **Impacto:** +40% capacidade
+            - **Tempo de implantação:** 6 meses
+            
+            ### 🤖 **Automação**
+            - **Custo fixo:** R$ 1.500.000
+            - **Custo variável:** reduz 20% MO
+            - **Impacto:** +20% capacidade + +10% eficiência
+            - **Tempo de implantação:** 1 ano
+            
+            ### 📦 **Terceirização**
+            - **Custo fixo:** sem custo fixo
+            - **Custo variável:** R$ 4/unidade
+            - **Impacto:** capacidade ilimitada
+            - **Tempo de implantação:** imediato
+            """)
+            st.subheader("Planeje as ações para cada início de ano:")
+    
+            opcoes = {
+                "Nada": {
+                    "descricao": "Manter operação atual",
+                    "custo_fixo": "R$ 0",
+                    "custo_variavel": "sem alteração",
+                    "impacto": "sem alteração",
+                    "tempo": "imediato"
+                },
+                "Turno extra": {
+                    "descricao": "Contratar turno extra de produção",
+                    "custo_fixo": "R$ 120.000/mês",
+                    "custo_variavel": "↑ 15% mão de obra",
+                    "impacto": "+25% capacidade",
+                    "tempo": "imediato"
+                },
+                "Nova máquina": {
+                    "descricao": "Adquirir nova máquina",
+                    "custo_fixo": "R$ 900.000",
+                    "custo_variavel": "+R$ 0,30/unidade",
+                    "impacto": "+40% capacidade",
+                    "tempo": "6 meses"
+                },
+                "Automação": {
+                    "descricao": "Implementar automação industrial",
+                    "custo_fixo": "R$ 1.500.000",
+                    "custo_variavel": "reduz 20% MO",
+                    "impacto": "+20% capacidade + +10% eficiência",
+                    "tempo": "1 ano"
+                },
+                "Terceirização": {
+                    "descricao": "Terceirizar parte da produção",
+                    "custo_fixo": "sem custo fixo",
+                    "custo_variavel": "R$ 4/unidade",
+                    "impacto": "capacidade ilimitada",
+                    "tempo": "imediato"
+                }
+            }
+    
+    
+            # Dicionário para armazenar as decisões
+            decisoes_anuais = {}
+            
+            for ano in Anos:
+                st.markdown(f"### 🗓️ Início de {ano}")
+                
+                # Selectbox para escolher a ação
+                acao_selecionada = st.selectbox(
+                    f"O que fazer em {ano}?",
+                    options=list(opcoes.keys()),
+                    index=0,  # "Nada" por padrão
+                    key=f"acao_{ano}",
+                    help=f"Escolha a ação a ser implementada no início de {ano}"
+                )
+                
+                decisoes_anuais[ano] = {
+                    'acao': acao_selecionada,
+                    'detalhes': opcoes[acao_selecionada]
+                }
+                    
+                        
+            def simular_lucro(Capacidade, Eficiencia, Penalidade, Demandas, decisoes_anuais, 
+                              preco_venda, custo_variavel_base, custo_fixo_mensal, taxa_juros):
+                capacidade_atual = Capacidade  # unid/mês
+                eficiencia_atual = Eficiencia
+                custo_variavel_atual = custo_variavel_base  # R$/unidade
+                custo_fixo_atual = custo_fixo_mensal  # R$/mês
+                
+                investimentos_pendentes = {}  # {ano_mes: [impactos a serem aplicados]}
+                
+                resultados = []
+                lucro_acumulado = 0
+                fluxo_caixa_anual = []
+                
+                for i, ano in enumerate(Anos):
+                    decisao = decisoes_anuais[ano]
+                    detalhes = decisao['detalhes']
+                    
+                    if investimentos_pendentes:
+                        for key in list(investimentos_pendentes.keys()):
+                            if key <= ano: 
+                                impacto = investimentos_pendentes.pop(key)
+                                
+                                if impacto['tipo'] == "Nova máquina":
+                                    capacidade_atual *= (1 + 0.40)  # +40% capacidade
+                                    custo_variavel_atual += 0.30  # +R$0,30/unidade
+                                elif impacto['tipo'] == "Automação":
+                                    capacidade_atual *= (1 + 0.20)  # +20% capacidade
+                                    eficiencia_atual = min(1.0, eficiencia_atual + 0.10)  # +10% eficiência
+                                    custo_variavel_atual *= (1 - 0.20)  # -20% custo variável
+                    
+                    if detalhes['tempo_meses'] == 0:
+                        if decisao['acao'] == "Turno extra":
+                            custo_fixo_atual += detalhes['custo_fixo']  # +R$120.000/mês
+                            custo_variavel_atual *= (1 + detalhes['custo_variavel'])  # +15%
+                            capacidade_atual *= (1 + detalhes['impacto_capacidade'])  # +25%
+                        
+                        elif decisao['acao'] == "Terceirização":
+                            pass  # Será tratado no cálculo de produção
+                        
+                        elif decisao['acao'] == "Nada":
+                            pass  # Nenhuma alteração
+                        
+                        elif decisao['acao'] in ["Nova máquina", "Automação"]:
+                            # Esses têm tempo de implantação, então adicionar à lista de pendentes
+                            mes_implantacao = ano + (detalhes['tempo_meses'] / 12)
+                            investimentos_pendentes[mes_implantacao] = {
+                                'tipo': decisao['acao'],
+                                'custo': detalhes['custo_fixo']
+                            }
+
+                    capacidade_anual_efetiva = capacidade_atual * 12 * eficiencia_atual
+                    
+                    if decisao['acao'] == "Terceirização":
+                        capacidade_anual_efetiva = float('inf')
+                    
+                    demanda_media = Demandas[i]['media']
+                    
+                    if capacidade_anual_efetiva >= demanda_media:
+                        producao_real = demanda_media
+                        unidades_nao_atendidas = 0
+                        capacidade_ociosa = capacidade_anual_efetiva - demanda_media
+                    else:
+                        producao_real = capacidade_anual_efetiva
+                        unidades_nao_atendidas = demanda_media - capacidade_anual_efetiva
+                        capacidade_ociosa = 0
+                    
+                    receita = producao_real * preco_venda
+                    
+                    if decisao['acao'] == "Terceirização":
+                        custo_var_total = producao_real * detalhes['custo_terceirizacao']
+                    else:
+                        custo_var_total = producao_real * custo_variavel_atual
+                    
+                    custo_fixo_anual = custo_fixo_atual * 12
+                    
+                    custo_penalidade = unidades_nao_atendidas * Penalidade
+                    
+                    custo_investimento = 0
+                    if detalhes['tempo_meses'] == 0 and decisao['acao'] in ["Nova máquina", "Automação"]:
+                        custo_investimento = detalhes['custo_fixo']
+                    
+                    lucro_anual = receita - custo_var_total - custo_fixo_anual - custo_penalidade - custo_investimento
+                    
+                    resultados.append({
+                        'Ano': ano,
+                        'Capacidade': capacidade_atual,
+                        'Eficiência': eficiencia_atual,
+                        'Demanda': demanda_media,
+                        'Produção': producao_real,
+                        'Receita': receita,
+                        'Custo Variável': custo_var_total,
+                        'Custo Fixo': custo_fixo_anual,
+                        'Penalidade': custo_penalidade,
+                        'Investimento': custo_investimento,
+                        'Lucro Anual': lucro_anual,
+                        'Decisão': decisao['acao']
+                    })
+                    
+                    fluxo_caixa_anual.append(lucro_anual)
+                    lucro_acumulado += lucro_anual
+                
+                vpl = 0
+                for t, fluxo in enumerate(fluxo_caixa_anual):
+                    vpl += fluxo / ((1 + taxa_juros) ** t)
+                
+                return resultados, lucro_acumulado, vpl
+            
+            if st.button("🚀 Executar Simulação", type="primary"):
+                st.header("📊 Resultados da Simulação")
+                
+                with st.spinner("Calculando resultados..."):
+                    resultados, lucro_total, vpl = simular_lucro(
+                        Capacidade, Eficiencia, Penalidade, Demandas, decisoes_anuais,
+                        preco_venda, custo_variavel_base, custo_fixo_mensal, taxa_juros
+                    )
+                
+                # Converter resultados para DataFrame
+                df_resultados = pd.DataFrame(resultados)
+                
+                # Mostrar tabela de resultados
+                st.subheader("📈 Desempenho Anual")
+                st.dataframe(
+                    df_resultados.style.format({
+                        'Capacidade': '{:,.0f}',
+                        'Eficiência': '{:.1%}',
+                        'Demanda': '{:,.0f}',
+                        'Produção': '{:,.0f}',
+                        'Receita': 'R$ {:,.2f}',
+                        'Custo Variável': 'R$ {:,.2f}',
+                        'Custo Fixo': 'R$ {:,.2f}',
+                        'Penalidade': 'R$ {:,.2f}',
+                        'Investimento': 'R$ {:,.2f}',
+                        'Lucro Anual': 'R$ {:,.2f}'
+                    }),
+                    use_container_width=True
                 )
             
-            with col2:
-                erro = st.number_input(
-                    f"Erro/Margem - {ano}",
-                    min_value=0,
-                    max_value=100000,
-                    value=100,
-                    step=10,
-                    help=f"Margem de erro para {ano} (±)",
-                    key=f"erro_{ano}"
-                )
+        if choice == menu[6]:
+            st.header(menu[6])
+            st.write("<h6 style='text-align: justify; color: Blue Jay;'>Estes aplicativos são referente à aula do dia 13/12/2025.</h6>", unsafe_allow_html=True)
+            st.write("<h6 style='text-align: justify; color: Blue Jay;'>Para mais informações, dúvidas e sugestões, por favor contacte nos e-mails abaixo:</h6>", unsafe_allow_html=True)
             
-            Demandas[ano-2025] = {
-                'media': media,
-                'erro': erro,
-                'min': max(0, media - erro),  # Não pode ser negativo
-                'max': media + erro
-            }
-
-        st.title("📋 Opções de Expansão de Capacidade")
-
-        st.markdown("""
-        ### 🏭 **Turno extra**
-        - **Custo fixo:** R$ 120.000/mês
-        - **Custo variável:** ↑ 15% mão de obra
-        - **Impacto:** +25% capacidade
-        - **Tempo de implantação:** imediato
-        
-        ### 🏗️ **Nova máquina**
-        - **Custo fixo:** R$ 900.000
-        - **Custo variável:** +R$ 0,30/unidade
-        - **Impacto:** +40% capacidade
-        - **Tempo de implantação:** 6 meses
-        
-        ### 🤖 **Automação**
-        - **Custo fixo:** R$ 1.500.000
-        - **Custo variável:** reduz 20% MO
-        - **Impacto:** +20% capacidade + +10% eficiência
-        - **Tempo de implantação:** 1 ano
-        
-        ### 📦 **Terceirização**
-        - **Custo fixo:** sem custo fixo
-        - **Custo variável:** R$ 4/unidade
-        - **Impacto:** capacidade ilimitada
-        - **Tempo de implantação:** imediato
-        """)
-        st.subheader("Planeje as ações para cada início de ano:")
-
-        opcoes = {
-            "Nada": {
-                "descricao": "Manter operação atual",
-                "custo_fixo": "R$ 0",
-                "custo_variavel": "sem alteração",
-                "impacto": "sem alteração",
-                "tempo": "imediato"
-            },
-            "Turno extra": {
-                "descricao": "Contratar turno extra de produção",
-                "custo_fixo": "R$ 120.000/mês",
-                "custo_variavel": "↑ 15% mão de obra",
-                "impacto": "+25% capacidade",
-                "tempo": "imediato"
-            },
-            "Nova máquina": {
-                "descricao": "Adquirir nova máquina",
-                "custo_fixo": "R$ 900.000",
-                "custo_variavel": "+R$ 0,30/unidade",
-                "impacto": "+40% capacidade",
-                "tempo": "6 meses"
-            },
-            "Automação": {
-                "descricao": "Implementar automação industrial",
-                "custo_fixo": "R$ 1.500.000",
-                "custo_variavel": "reduz 20% MO",
-                "impacto": "+20% capacidade + +10% eficiência",
-                "tempo": "1 ano"
-            },
-            "Terceirização": {
-                "descricao": "Terceirizar parte da produção",
-                "custo_fixo": "sem custo fixo",
-                "custo_variavel": "R$ 4/unidade",
-                "impacto": "capacidade ilimitada",
-                "tempo": "imediato"
-            }
-        }
-
-
-        # Dicionário para armazenar as decisões
-        decisoes_anuais = {}
-        
-        for ano in Anos:
-            st.markdown(f"### 🗓️ Início de {ano}")
-            
-            # Selectbox para escolher a ação
-            acao_selecionada = st.selectbox(
-                f"O que fazer em {ano}?",
-                options=list(opcoes.keys()),
-                index=0,  # "Nada" por padrão
-                key=f"acao_{ano}",
-                help=f"Escolha a ação a ser implementada no início de {ano}"
-            )
-            
-            decisoes_anuais[ano] = {
-                'acao': acao_selecionada,
-                'detalhes': opcoes[acao_selecionada]
-            }
-        
-        
-    if choice == menu[6]:
-        st.header(menu[6])
-        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Estes aplicativos são referente à aula do dia 13/12/2025.</h6>", unsafe_allow_html=True)
-        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Para mais informações, dúvidas e sugestões, por favor contacte nos e-mails abaixo:</h6>", unsafe_allow_html=True)
-        
-        st.write('''
-
-victor.lima@ifpe.edu.br
-
-vhugoreslim@gmail.com
-
-''' .format(chr(948), chr(948), chr(948), chr(948), chr(948)))       
+            st.write('''
+    
+    victor.lima@ifpe.edu.br
+    
+    vhugoreslim@gmail.com
+    
+    ''' .format(chr(948), chr(948), chr(948), chr(948), chr(948)))       
 if st._is_running_with_streamlit:
     main()
 else:
