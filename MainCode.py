@@ -409,6 +409,17 @@ def main():
                     vpl += fluxo / ((1 + taxa_juros) ** t)
                 
                 return resultados, lucro_acumulado, vpl
+            if st.button("🚀 Executar Simulação", type="primary"):
+                st.header("📊 Resultados da Simulação")
+                
+                with st.spinner("Calculando resultados..."):
+                    resultados, lucro_total = simular_lucro_simples(
+                        Capacidade, Eficiencia, Penalidade, Demandas, decisoes_anuais
+                    )
+                
+                df_resultados = pd.DataFrame(resultados)
+                st.dataframe(df_resultados, use_container_width=True)
+                st.success(f"Lucro Total: R$ {lucro_total:,.2f}")
         else:    
         
             if choice == menu[6]:
