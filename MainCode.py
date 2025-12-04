@@ -337,7 +337,7 @@ def main():
                 df["date"] = pd.to_datetime(df["date"])
                 
                 st.subheader("📊 Série Temporal de Vendas")
-
+                st.set_option('deprecation.showPyplotGlobalUse', False)
                 plt.figure(figsize=(8,4))
                 plt.plot(df["date"], df["sales"], marker='o', linewidth=1)
                 plt.xlabel("Data")
@@ -346,17 +346,12 @@ def main():
                 plt.grid(True)
                 st.pyplot()
                 
-                # ------------------------------------------------------
-                # SELEÇÃO DO MODELO
-                # ------------------------------------------------------
                 st.subheader("⚙️ Seleção do Modelo de Previsão")
                 
                 modelo = st.selectbox(
                     "Escolha o modelo:",
-                    ["Média Móvel", "Ingênuo (Naive)", "Sazonal Ingênuo", "Suavização Exponencial (SES)"]
-                )
+                    ["Média Móvel", "Acompanhamento da Demanda", "Sazonal Ingênuo", "Suavização Exponencial (SES)"])
                 
-                # Parâmetros extras
                 if modelo == "Média Móvel":
                     janela = st.slider("Escolha a janela da média móvel:", 2, 30, 7)
                 elif modelo == "Sazonal Ingênuo":
@@ -364,15 +359,10 @@ def main():
                 elif modelo == "Suavização Exponencial (SES)":
                     alpha = st.slider("Alpha (0 = lento, 1 = reativo)", 0.01, 0.99, 0.3)
                 
-                # ------------------------------------------------------
-                # SELEÇÃO DO PERÍODO DE TREINO
-                # ------------------------------------------------------
                 st.subheader("🛠 Período de treino")
-                
                 train_pct = st.slider(
                     "Percentual de dados para treino:",
-                    min_value=50, max_value=95, value=80
-                )
+                    min_value=50, max_value=95, value=80)
                 
                 train_size = int(len(df) * train_pct / 100)
                 if train_size < 3:
@@ -384,43 +374,27 @@ def main():
                 
                 st.write(f"📌 Treino: {len(df_train)} pontos | Teste: {len(df_test)} pontos")
                 
-                # ------------------------------------------------------
-                # TREINAMENTO E PREVISÃO
-                # ------------------------------------------------------
-                # Inicializar colunas
                 df_train["forecast"] = np.nan
                 df_test["forecast"] = np.nan
                 
-                # FUNÇÃO SES
                 def ses_in_sample_and_forecast(series, alpha, horizon):
-                    """
-                    Retorna: fitted_in_sample (array com tamanho len(series)),
-                    forecast_out (array com tamanho horizon)
-                    """
                     n = len(series)
                     fitted = np.zeros(n)
-                    # inicialização: usar primeiro valor como s0
                     s = series[0]
                     fitted[0] = s
                     for t in range(1, n):
-                        # usando y_{t-1} para previsões alinhadas com o código anterior (alternativa: usar y_t)
                         s = alpha * series[t-1] + (1 - alpha) * s
                         fitted[t] = s
-                    # último nível para forecast (previsão constante)
                     last_level = s
                     forecast = np.array([last_level] * horizon)
                     return fitted, forecast
                 
-                # Aplicar modelos
                 if modelo == "Média Móvel":
-                    # fitted in-sample
                     df_train["forecast"] = df_train["sales"].rolling(janela).mean().fillna(method="bfill")
-                    # forecast for test: iterative using previous history (walk-forward naive)
                     history = list(df_train["sales"].iloc[-janela:])
                     test_forecasts = []
                     for i in range(len(df_test)):
                         test_forecasts.append(np.mean(history[-janela:]))
-                        # simulate adding the actual observed after forecast (real walk-forward)
                         history.append(df_test["sales"].iloc[i])
                     df_test["forecast"] = test_forecasts
                 
@@ -431,7 +405,6 @@ def main():
                 
                 elif modelo == "Sazonal Ingênuo":
                     df_train["forecast"] = df_train["sales"].shift(sazonalidade).fillna(method="bfill")
-                    # criar previsão repetindo a última sazonalidade observada
                     last_season = list(df_train["sales"].iloc[-sazonalidade:])  # ordem cronológica
                     reps = (len(df_test) // sazonalidade) + 1
                     repeated = (last_season * reps)[:len(df_test)]
@@ -443,20 +416,15 @@ def main():
                     df_train["forecast"] = fitted_vals
                     df_test["forecast"] = forecast_vals
                 
-                # Unir previsões para plot
                 df_train["set"] = "train"
                 df_test["set"] = "test"
                 df_all = pd.concat([df_train, df_test]).reset_index(drop=True)
                 
-                # ------------------------------------------------------
-                # GRÁFICO: OBSERVADO VS PREVISTO
-                # ------------------------------------------------------
                 st.subheader("📈 Observado vs Previsto")
                 
                 plt.figure(figsize=(10,4))
                 plt.plot(df_all["date"], df_all["sales"], label="Observado", marker='o', linewidth=1)
                 plt.plot(df_all["date"], df_all["forecast"], label="Previsto", linestyle="--", marker='x')
-                # linha vertical separando treino/teste
                 split_date = df_train["date"].iloc[-1]
                 plt.axvline(split_date, color='gray', linestyle=':', label='Divisão treino/teste')
                 plt.xlabel("Data")
@@ -465,12 +433,8 @@ def main():
                 plt.grid(True)
                 st.pyplot()
                 
-                # ------------------------------------------------------
-                # CÁLCULO DAS MÉTRICAS (apenas sobre o conjunto de teste)
-                # ------------------------------------------------------
                 st.subheader("📌 Métricas de Desempenho (Conjunto de Teste)")
                 
-                # evite divisão por zero em MAPE
                 mask_valid = df_test["sales"] != 0
                 if mask_valid.sum() == 0:
                     st.error("Conjunto de teste contém apenas zeros — MAPE indefinido.")
@@ -489,9 +453,6 @@ def main():
                 
                     st.dataframe(metrics.style.format("{:.3f}"))
                 
-                    # ------------------------------------------------------
-                    # GRÁFICO DO ERRO
-                    # ------------------------------------------------------
                     st.subheader("📉 Erro Absoluto ao longo do tempo (Conjunto de Teste)")
                 
                     plt.figure(figsize=(10,3))
@@ -501,9 +462,6 @@ def main():
                     plt.grid(axis='y')
                     st.pyplot()
                 
-                    # ------------------------------------------------------
-                    # DISTRIBUIÇÃO DO ERRO
-                    # ------------------------------------------------------
                     st.subheader("📊 Distribuição do Erro (Conjunto de Teste)")
                 
                     plt.figure(figsize=(6,3))
