@@ -334,13 +334,12 @@ def main():
                     [80, 48], [81, 50], [82, 52], [83, 32], [84, 30], [85, 44], [86, 47], [87, 49], [88, 51], [89, 54]]
                 
                 df = pd.DataFrame(data, columns=["date", "sales"])
-                df["date"] = pd.to_datetime(df["date"])
                 
                 st.subheader("📊 Série Temporal de Vendas")
                 st.set_option('deprecation.showPyplotGlobalUse', False)
                 plt.figure(figsize=(8,4))
-                plt.plot(df["date"], df["sales"], marker='o', linewidth=1)
-                plt.xlabel("Data")
+                plt.plot(df["date"], df["sales"], linewidth=1)
+                plt.xlabel("Dia")
                 plt.ylabel("Vendas")
                 plt.title("Série Temporal")
                 plt.grid(True)
