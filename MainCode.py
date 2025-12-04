@@ -162,7 +162,7 @@ def main():
             custo_variavel_base = st.number_input("Custo variável base por unidade (R$)", min_value=0.0, value=8.0, step=0.5, help="Custo variável atual por unidade produzida")
             custo_fixo_mensal = st.number_input("Custo fixo mensal atual (R$/mês)", min_value=0.0, value=500.0, step=10.0, help="Custos fixos mensais atuais")
             Anos = [2025, 2026, 2027, 2028]
-            valores_padrao = [1800, 1500, 2000, 2500]
+            valores_padrao = [1200, 1400, 2000, 2000]
             Demandas = []
             for i, (col, ano, valor_padrao) in enumerate(zip(st.columns(4), Anos, valores_padrao)):
                 with col:
