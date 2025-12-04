@@ -72,11 +72,41 @@ def main():
                     value=0.1,
                     step=0.01,
                     help=f"{help_text} - Desvio-padrão"
-                ) 
-    if choice == menu[1]:
-        st.header(menu[1])
-        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Este aplicativo é referente à aula do dia 13/12/2025, sobre o tema Planejamento Estratégico da Produção: Estratégia de Operações, Objetivos e Papéis Estratégicos, Avaliação da Importância e Desempenho dos Critérios Competitivos</h6>", unsafe_allow_html=True)
-        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Nele, o usuário pode comparar a sua estratégia frente à concorrência, dando maior ou menor peso a cada critério. Indica-se que a atribuição de pesos a cada um dos critérios competitivos deve ser feita por uma pessoa diferente que conhece o ambiente competitivo a qual está inserido o usuário. Assim, a aplicação traz mais um grau de realidade.</h6>", unsafe_allow_html=True)
+                )
+
+    st.subheader("Defina os pesos dos critérios competitivos (Total deve somar 100%)")
+
+    # Critérios com descrições
+    criterios = {
+        "Custo": "Importância do custo na competitividade",
+        "Qualidade": "Importância da qualidade na competitividade",
+        "Flexibilidade": "Importância da flexibilidade na competitividade",
+        "Entrega": "Importância da entrega na competitividade",
+        "Inovação Tecnológica": "Importância da inovação na competitividade",
+        "Capacidade": "Importância da capacidade na competitividade",
+        "Previsão de Demanda": "Importância da previsão na competitividade"
+    }
+    
+    pesos = {}
+    total = 0
+    
+    st.markdown("### Ajuste os pesos:")
+    for i, (criterio, ajuda) in enumerate(criterios.items()):
+        peso = st.slider(
+            f"Peso de {criterio} (%)",
+            min_value=0,
+            max_value=100,
+            value=15 if i == 0 else 14,  # Valores iniciais distribuídos
+            step=1,
+            help=ajuda,
+            key=f"peso_{criterio}"
+        )
+        pesos[criterio] = peso
+        total += peso
+                
+    if choice == menu[6]:
+        st.header(menu[6])
+        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Estes aplicativos são referente à aula do dia 13/12/2025.</h6>", unsafe_allow_html=True)
         st.write("<h6 style='text-align: justify; color: Blue Jay;'>Para mais informações, dúvidas e sugestões, por favor contacte nos e-mails abaixo:</h6>", unsafe_allow_html=True)
         
         st.write('''
