@@ -178,7 +178,7 @@ def main():
         Penalidade=st.number_input("Custo de penalidade por unidade não atendida (R$/unid)", help="Selecione o custo de penlidade.")
         Anos = [2024, 2025, 2026, 2027, 2028]
         Demandas = {}
-        for ano in anos:
+        for ano in Anos:
             col1, col2 = st.columns(2)
             
             with col1:
