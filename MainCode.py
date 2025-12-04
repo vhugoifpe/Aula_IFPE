@@ -397,7 +397,7 @@ def main():
                         history.append(df_test["sales"].iloc[i])
                     df_test["forecast"] = test_forecasts
                 
-                elif modelo == "Ingênuo (Naive)":
+                elif modelo == "Acompanhamento da Demanda":
                     df_train["forecast"] = df_train["sales"].shift(1).fillna(method="bfill")
                     last_value = df_train["sales"].iloc[-1]
                     df_test["forecast"] = [last_value] * len(df_test)
