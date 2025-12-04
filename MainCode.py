@@ -410,36 +410,6 @@ def main():
                 
                 return resultados, lucro_acumulado, vpl
             
-            if st.button("🚀 Executar Simulação", type="primary"):
-                st.header("📊 Resultados da Simulação")
-                
-                with st.spinner("Calculando resultados..."):
-                    resultados, lucro_total, vpl = simular_lucro(
-                        Capacidade, Eficiencia, Penalidade, Demandas, decisoes_anuais,
-                        preco_venda, custo_variavel_base, custo_fixo_mensal, taxa_juros
-                    )
-                
-                # Converter resultados para DataFrame
-                df_resultados = pd.DataFrame(resultados)
-                
-                # Mostrar tabela de resultados
-                st.subheader("📈 Desempenho Anual")
-                st.dataframe(
-                    df_resultados.style.format({
-                        'Capacidade': '{:,.0f}',
-                        'Eficiência': '{:.1%}',
-                        'Demanda': '{:,.0f}',
-                        'Produção': '{:,.0f}',
-                        'Receita': 'R$ {:,.2f}',
-                        'Custo Variável': 'R$ {:,.2f}',
-                        'Custo Fixo': 'R$ {:,.2f}',
-                        'Penalidade': 'R$ {:,.2f}',
-                        'Investimento': 'R$ {:,.2f}',
-                        'Lucro Anual': 'R$ {:,.2f}'
-                    }),
-                    use_container_width=True
-                )
-            
         if choice == menu[6]:
             st.header(menu[6])
             st.write("<h6 style='text-align: justify; color: Blue Jay;'>Estes aplicativos são referente à aula do dia 13/12/2025.</h6>", unsafe_allow_html=True)
