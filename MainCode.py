@@ -4,7 +4,6 @@ import sys
 from streamlit import cli as stcli
 from PIL import Image
 import pandas as pd
-from sklearn.linear_model import LinearRegression
 from math import sqrt
 
 def main():
