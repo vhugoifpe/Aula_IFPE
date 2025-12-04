@@ -297,8 +297,6 @@ def main():
                 'acao': acao_selecionada,
                 'detalhes': opcoes[acao_selecionada]
             }
-            
-            st.divider()
         
         
     if choice == menu[6]:
