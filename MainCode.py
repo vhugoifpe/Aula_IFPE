@@ -21,7 +21,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-    menu = ["App_Estrat_Oper","App_Plan_Cap","App_Prev_Dem","App_Ges_Proj_Chicote","App_Ges_Proj_CPM_PERT","App_Ges_Qua", "Informações"]
+    menu = ["Estratégia de Operações","Planejamento de Capacidade","Previsão de Demanda","Gestão de Projetos","Gestão da Qualidade", "Informações"]
     
     choice = st.sidebar.selectbox("Select here", menu)
     
