@@ -162,8 +162,6 @@ def main():
             "Peso (%)": [pesos[c] for c in criterios.keys()]
         })
     
-        %st.dataframe(df_resultado, use_container_width=True)
-    
         st.markdown("## 🧮 **Desempenho Global Ponderado**")
         colA, colB = st.columns(2)
     
