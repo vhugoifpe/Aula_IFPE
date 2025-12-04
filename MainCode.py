@@ -114,8 +114,8 @@ def main():
         if total == 100:
         
             mapa_escala = {
-                "Baixo": 0.2, "Baixo/Médio": 0.35, "Médio": 0.5,
-                "Médio/Alto": 0.65, "Alto": 0.8,
+                "Baixo": 0.8, "Baixo/Médio": 0.65, "Médio": 0.5,
+                "Médio/Alto": 0.35, "Alto": 0.2,
         
                 "Baixa": 0.2, "Média": 0.5, "Alta": 0.8,
         
