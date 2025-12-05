@@ -592,7 +592,7 @@ def main():
                                 }
                                 st.session_state.activities.append(act)
                                 st.success(f"Atividade {act['id']} adicionada.")
-                                st.rerun()  # Isso recarrega a página para atualizar o sidebar
+                                st.experimental_rerun()
                     
                     st.header("📋 Atividades cadastradas")
                     if len(st.session_state.activities) == 0:
