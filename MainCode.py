@@ -565,33 +565,36 @@ def main():
                                               default=[])
                         
                         add = st.form_submit_button("Adicionar Atividade")
-                        
-                        if add:
-                            # Verificar se a atividade tem dependência de si mesma (evitar loop)
-                            if new_activity_id in deps:
-                                st.error("Uma atividade não pode depender de si mesma!")
-                            elif not (a <= m <= b):
-                                st.error("Valide: precisa ser a ≤ m ≤ b")
-                            elif crash_duration > m:
-                                st.error("Duração mínima após crash não pode ser maior que m (duração típica).")
-                            else:
-                                te = (a + 4*m + b) / 6.0
-                                var = ((b - a) / 6.0) ** 2
-                                act = {
-                                    "id": new_activity_id,
-                                    "a": float(a),
-                                    "m": float(m),
-                                    "b": float(b),
-                                    "te": float(te),
-                                    "var": float(var),
-                                    "cost_normal": float(cost_normal),
-                                    "cost_crash": float(cost_crash),
-                                    "crash_duration": float(crash_duration),
-                                    "deps": list(deps)
-                                }
-                                st.session_state.activities.append(act)
-                                st.success(f"Atividade {act['id']} adicionada.")
-                                st.rerun()  # Isso recarrega a página para atualizar o sidebar
+                    
+                    # Mover a lógica de adição PARA FORA do formulário
+                    if add:
+                        # Verificar se a atividade tem dependência de si mesma (evitar loop)
+                        if new_activity_id in deps:
+                            st.sidebar.error("Uma atividade não pode depender de si mesma!")
+                        elif not (a <= m <= b):
+                            st.sidebar.error("Valide: precisa ser a ≤ m ≤ b")
+                        elif crash_duration > m:
+                            st.sidebar.error("Duração mínima após crash não pode ser maior que m (duração típica).")
+                        else:
+                            te = (a + 4*m + b) / 6.0
+                            var = ((b - a) / 6.0) ** 2
+                            act = {
+                                "id": new_activity_id,
+                                "a": float(a),
+                                "m": float(m),
+                                "b": float(b),
+                                "te": float(te),
+                                "var": float(var),
+                                "cost_normal": float(cost_normal),
+                                "cost_crash": float(cost_crash),
+                                "crash_duration": float(crash_duration),
+                                "deps": list(deps)
+                            }
+                            st.session_state.activities.append(act)
+                            st.sidebar.success(f"Atividade {act['id']} adicionada.")
+                            
+                            # Usar experimental_rerun em vez de rerun
+                            st.experimental_rerun()
                     
                     st.header("📋 Atividades cadastradas")
                     if len(st.session_state.activities) == 0:
