@@ -587,10 +587,10 @@ def main():
                     def build_dag(activities, duration_key="te"):
                         G = nx.DiGraph()
                         for act in activities:
-                            G.add_node(act["Id"], duration=act[duration_key], var=act["Var"])
+                            G.add_node(act["id"], duration=act[duration_key], var=act["var"])
                         for act in activities:
-                            for p in act["Deps"]:
-                                G.add_edge(p, act["Id"])
+                            for p in act["deps"]:
+                                G.add_edge(p, act["id"])
                         return G
                     
                     def compute_cpm(G):
