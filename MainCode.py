@@ -6,7 +6,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 import pandas as pd
-from math import sqrt, erf
+from math import sqrt, erf, pi
 from io import StringIO
 import networkx as nx
 
@@ -789,7 +789,7 @@ def main():
                         
                         # plot normal curve with marker
                         x = np.linspace(mu - 4*sigma, mu + 4*sigma, 200)
-                        pdf = (1/ (sigma * sqrt(2*math.pi))) * np.exp(-0.5*((x-mu)/sigma)**2)
+                        pdf = (1/ (sigma * sqrt(2*pi))) * np.exp(-0.5*((x-mu)/sigma)**2)
                         fig2, ax2 = plt.subplots(figsize=(8,3))
                         ax2.plot(x, pdf, label="Distribuição Normal aproximada do tempo do projeto")
                         ax2.axvline(deadline, color='red', linestyle='--', label=f"Deadline ({deadline})")
