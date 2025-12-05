@@ -914,7 +914,10 @@ def main():
 
                 else:
                      if choice == menu[4]:
-                        def text_to_df(text, colnames):
+                        
+                        st.title("📊 Ferramentas da Qualidade — App Interativo")
+                        
+                        def parse_manual_table(text, colnames):
                             lines = [l.strip() for l in text.strip().split("\n") if l.strip()]
                             rows = [l.split(",") for l in lines]
                             df = pd.DataFrame(rows, columns=colnames)
@@ -922,89 +925,201 @@ def main():
                                 df[c] = pd.to_numeric(df[c], errors='coerce')
                             return df
                         
-                        st.title("📊 Ferramentas da Qualidade — App Interativo")
+                        def parse_numeric_list(text):
+                            return [float(x) for x in text.replace(",", "\n").split()]
                         
                         menu = st.sidebar.radio(
-                            "Selecione a ferramenta:",
+                            "Escolha a ferramenta:",
                             ["Pareto & Estratificação", "CEP (Controle Estatístico)", "Histograma"]
                         )
                         
-                        # 1) Pareto
+                        # ---------------------------- ENTRADA DE DADOS ----------------------
+                        
+                        st.sidebar.subheader("📥 Entrada de Dados")
+                        
+                        input_type = st.sidebar.selectbox(
+                            "Como você deseja inserir os dados?",
+                            ["Digitar manualmente", "Colar dados (Excel)"]
+                        )
+                        
+                        # Conteúdo preenchido dinamicamente conforme o método escolhido
+                        df_input = None
+                        
+                        # --- 1) DIGITAR ---
+                        if input_type == "Digitar manualmente":
+                            st.sidebar.write("Digite tabela no formato: **Valor1,Valor2**")
+                        
+                            manual_text = st.sidebar.text_area(
+                                "Dados:",
+                                height=150,
+                                placeholder="Ex:\nFalha A,10\nFalha B,20\nFalha C,5"
+                            )
+                        
+                        # --- 2) COLAR EXCEL ---
+                        else:
+                            st.sidebar.write("Cole tabela exatamente como no Excel:")
+                        
+                            excel_text = st.sidebar.text_area(
+                                "Cole aqui:",
+                                height=150,
+                                placeholder="Problema\tQuantidade\nFalha A\t10\nFalha B\t20"
+                            )
+                        
+                        # ------------------------- PROCESSAMENTO ---------------------------
+                        
+                        # Se for Pareto → duas colunas
                         if menu == "Pareto & Estratificação":
-                            st.header("📌 Pareto e Estratificação")
                         
-                            st.write("Digite os dados no formato: **Problema,Quantidade**")
+                            st.header("📌 Pareto & Estratificação")
                         
-                            default_text = """Falha A,10
-                        Falha B,25
-                        Falha C,5
-                        Falha D,18"""
+                            st.write("### 🔢 Dados da Análise")
                         
-                            text_input = st.text_area("Dados (um por linha):", value=default_text, height=150)
+                            # Se não veio via CSV, criar DataFrame
+                            if df_input is None:
                         
-                            df = text_to_df(text_input, ["Problema", "Quantidade"])
+                                if input_type == "Digitar manualmente":
+                                    if manual_text.strip():
+                                        df_input = parse_manual_table(manual_text, ["Problema", "Quantidade"])
                         
-                            if df["Quantidade"].sum() > 0:
-                                df = df.groupby("Problema").sum().sort_values("Quantidade", ascending=False)
-                                cumul = df["Quantidade"].cumsum() / df["Quantidade"].sum() * 100
+                                elif input_type == "Colar dados (Excel)":
+                                    if excel_text.strip():
+                                        # Excel usa TAB
+                                        try:
+                                            df_input = pd.read_csv(pd.compat.StringIO(excel_text), sep="\t")
+                                        except:
+                                            st.error("Não foi possível interpretar os dados colados.")
+                                            st.stop()
                         
-                                fig, ax1 = plt.subplots(figsize=(8,4))
-                                ax1.bar(df.index, df["Quantidade"])
-                                ax1.set_xticklabels(df.index, rotation=45)
-                                ax2 = ax1.twinx()
-                                ax2.plot(df.index, cumul.values, marker="o")
-                                ax2.set_ylim(0, 110)
-                                st.pyplot(fig)
+                            if df_input is None:
+                                st.info("Insira seus dados para gerar o Pareto.")
+                                st.stop()
                         
-                        # 2) CEP
+                            st.dataframe(df_input)
+                        
+                            # Garantir que as colunas numéricas foram convertidas
+                            df_input["Quantidade"] = pd.to_numeric(df_input["Quantidade"], errors="coerce").fillna(0)
+                        
+                            # Ordena e calcula Pareto
+                            df = df_input.groupby("Problema").sum().sort_values("Quantidade", ascending=False)
+                            cumul = df["Quantidade"].cumsum() / df["Quantidade"].sum() * 100
+                        
+                            st.subheader("📈 Gráfico de Pareto")
+                        
+                            fig, ax1 = plt.subplots(figsize=(8,4))
+                            ax1.bar(df.index, df["Quantidade"])
+                            ax1.set_xticklabels(df.index, rotation=45)
+                        
+                            ax2 = ax1.twinx()
+                            ax2.plot(df.index, cumul.values, marker="o", color="red")
+                            ax2.set_ylim(0, 110)
+                        
+                            st.pyplot(fig)
+                        
+                        
+                        # ------------------------------ CEP --------------------------------
+                        
                         elif menu == "CEP (Controle Estatístico)":
+                        
                             st.header("📌 CEP — Controle Estatístico do Processo")
                         
-                            st.write("Digite valores numéricos separados por vírgula ou linha:")
+                            if df_input is None:
                         
-                            default_text = "10\n11\n9\n12\n10\n11\n13\n8\n10"
+                                if input_type == "Digitar manualmente":
+                                    text = st.sidebar.text_area(
+                                        "Valores numéricos:",
+                                        height=150,
+                                        placeholder="10, 12, 11, 13, 9..."
+                                    )
+                                    if text.strip():
+                                        try:
+                                            values = parse_numeric_list(text)
+                                            df_input = pd.DataFrame({"Valor": values})
+                                        except:
+                                            st.error("Erro ao converter os números.")
+                                            st.stop()
                         
-                            numbers_text = st.text_area("Valores:", value=default_text, height=150)
+                                elif input_type == "Colar dados (Excel)":
+                                    text = st.sidebar.text_area("Cole aqui:", height=150)
+                                    if text.strip():
+                                        try:
+                                            values = parse_numeric_list(text)
+                                            df_input = pd.DataFrame({"Valor": values})
+                                        except:
+                                            st.error("Erro ao ler os valores.")
+                                            st.stop()
                         
-                            try:
-                                numbers = [float(x) for x in numbers_text.replace(",", "\n").split()]
-                            except:
-                                st.error("Erro ao converter os valores. Verifique o formato.")
+                            if df_input is None:
+                                st.info("Insira seus dados para gerar o gráfico CEP.")
                                 st.stop()
                         
-                            if len(numbers) > 2:
-                                series = np.array(numbers)
-                                mean = np.mean(series)
-                                std = np.std(series)
-                                UCL = mean + 3*std
-                                LCL = mean - 3*std
+                            st.dataframe(df_input)
                         
-                                fig, ax = plt.subplots(figsize=(8,4))
-                                ax.plot(series, marker="o")
-                                ax.axhline(mean, color="green", linestyle="--", label="Média")
-                                ax.axhline(UCL, color="red", linestyle="--", label="UCL (+3σ)")
-                                ax.axhline(LCL, color="red", linestyle="--", label="LCL (-3σ)")
-                                ax.legend()
-                                st.pyplot(fig)
+                            series = df_input["Valor"].values
+                            mean = np.mean(series)
+                            std = np.std(series)
+                            UCL = mean + 3 * std
+                            LCL = mean - 3 * std
                         
-                        # 3) Histograma
-                        elif menu == "Histograma":
+                            st.subheader("📈 CEP")
+                        
+                            fig, ax = plt.subplots(figsize=(8,4))
+                            ax.plot(series, marker="o")
+                            ax.axhline(mean, color="green", linestyle="--", label="Média")
+                            ax.axhline(UCL, color="red", linestyle="--", label="UCL")
+                            ax.axhline(LCL, color="red", linestyle="--", label="LCL")
+                            ax.legend()
+                        
+                            st.pyplot(fig)
+                        
+                        # ------------------------------ HISTOGRAMA --------------------------
+                        
+                        else:
+                        
                             st.header("📌 Histograma")
                         
-                            default_text = "10, 12, 11, 14, 9, 8, 7, 9, 10, 13"
+                            if df_input is None:
                         
-                            numbers_text = st.text_area("Valores (vírgula ou quebra de linha):", value=default_text, height=150)
+                                if input_type == "Digitar manualmente":
+                                    text = st.sidebar.text_area(
+                                        "Valores numéricos:",
+                                        height=150,
+                                        placeholder="10, 12, 11, 13, 9..."
+                                    )
+                                    if text.strip():
+                                        try:
+                                            values = parse_numeric_list(text)
+                                            df_input = pd.DataFrame({"Valor": values})
+                                        except:
+                                            st.error("Erro ao converter os valores.")
+                                            st.stop()
                         
-                            try:
-                                values = [float(x) for x in numbers_text.replace(",", "\n").split()]
-                            except:
-                                st.error("Erro ao converter valores numéricos.")
+                                elif input_type == "Colar dados (Excel)":
+                                    text = st.sidebar.text_area("Cole aqui:", height=150)
+                                    if text.strip():
+                                        try:
+                                            values = parse_numeric_list(text)
+                                            df_input = pd.DataFrame({"Valor": values})
+                                        except:
+                                            st.error("Erro ao converter valores.")
+                                            st.stop()
+                        
+                            if df_input is None:
+                                st.info("Insira os dados para gerar o histograma.")
                                 st.stop()
+                        
+                            st.dataframe(df_input)
+                        
+                            values = df_input["Valor"].values
+                        
+                            st.subheader("📊 Histograma")
                         
                             fig, ax = plt.subplots(figsize=(8,4))
                             ax.hist(values, bins=10)
                             st.pyplot(fig)
-                            st.write(pd.Series(values).describe())
+                        
+                            st.subheader("📋 Estatísticas")
+                            st.write(df_input.describe())
+
                         
                      else:
                         st.header(menu[5])
