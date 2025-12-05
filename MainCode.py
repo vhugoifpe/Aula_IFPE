@@ -833,7 +833,7 @@ def main():
 
                 else:
                      if choice == menu[4]:
-
+                        A=A
                      else:
                         st.header(menu[5])
                         st.write("<h6 style='text-align: justify; color: Blue Jay;'>Estes aplicativos são referente à aula do dia 13/12/2025.</h6>", unsafe_allow_html=True)
