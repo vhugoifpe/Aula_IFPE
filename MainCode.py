@@ -553,12 +553,15 @@ def main():
                         crash_duration = st.number_input("Duração mínima possível após crash (tempo)", min_value=0.0, value=np.round(np.random.uniform(a, m), 1), step=0.5)
                         
                         new_activity_id = next_activity_name()
-                        existing = [act["Id"] for act in st.session_state.activities]  # MUDADO: "Id" em vez de "id"
+                        existing = [act["Id"] for act in st.session_state.activities]
                         all_options = existing
                         deps = st.multiselect("Dependências (atividades que devem terminar antes)", 
                                               options=all_options, 
                                               default=[])
                         add = st.form_submit_button("Adicionar Atividade")
+                    
+                    # Variável para controlar se precisamos recarregar
+                    should_rerun = False
                     
                     if add:
                         if new_activity_id in deps:
@@ -571,20 +574,22 @@ def main():
                             te = (a + 4*m + b) / 6.0
                             var = ((b - a) / 6.0) ** 2
                             act = {
-                                "Id": new_activity_id,  # MUDADO: "Id" com maiúscula
+                                "Id": new_activity_id,
                                 "a": float(a),
                                 "m": float(m),
                                 "b": float(b),
                                 "te": float(te),
-                                "Var": float(var),  # MUDADO: "Var" com maiúscula
-                                "Custo Normal": float(cost_normal),  # MUDADO: "Custo Normal" com espaço
-                                "Custo Crash": float(cost_crash),    # MUDADO: "Custo Crash" com espaço
-                                "Duração Crash": float(crash_duration),  # MUDADO: "Duração Crash" com espaço
-                                "Deps": list(deps)  # MUDADO: "Deps" com maiúscula
+                                "Var": float(var),
+                                "Custo Normal": float(cost_normal),
+                                "Custo Crash": float(cost_crash),
+                                "Duração Crash": float(crash_duration),
+                                "Deps": list(deps)
                             }
                             st.session_state.activities.append(act)
-                            st.sidebar.success(f"Atividade {act['Id']} adicionada.")  # MUDADO: acessar "Id" em vez de "id"
-                            st.rerun()
+                            st.sidebar.success(f"Atividade {act['Id']} adicionada.")
+                            should_rerun = True
+                    
+                    # Código principal continua aqui...
                     
                     st.header("📋 Atividades cadastradas")
                     if len(st.session_state.activities) == 0:
@@ -597,10 +602,10 @@ def main():
                     def build_dag(activities, duration_key="te"):
                         G = nx.DiGraph()
                         for act in activities:
-                            G.add_node(act["Id"], duration=act[duration_key], var=act["Var"])  # MUDADO: "Id" e "Var"
+                            G.add_node(act["Id"], duration=act[duration_key], var=act["Var"])
                         for act in activities:
-                            for p in act["Deps"]:  # MUDADO: "Deps" com maiúscula
-                                G.add_edge(p, act["Id"])  # MUDADO: "Id" com maiúscula
+                            for p in act["Deps"]:
+                                G.add_edge(p, act["Id"])
                         return G
                     
                     def compute_cpm(G):
@@ -653,7 +658,7 @@ def main():
                         # --------------------------
                         table = []
                         for act in st.session_state.activities:
-                            idn = act["Id"]  # MUDADO: "Id" com maiúscula
+                            idn = act["Id"]
                             table.append({
                                 "Atividade": idn,
                                 "Duração (te)": G.nodes[idn]["duration"],
@@ -662,9 +667,9 @@ def main():
                                 "LS": cpm["LS"][idn],
                                 "LF": cpm["LF"][idn],
                                 "Folga": cpm["slack"][idn],
-                                "Custo Normal": act["Custo Normal"],  # MUDADO: "Custo Normal"
-                                "Custo Crash": act["Custo Crash"],    # MUDADO: "Custo Crash"
-                                "Crash Dur": act["Duração Crash"]     # MUDADO: "Duração Crash"
+                                "Custo Normal": act["Custo Normal"],
+                                "Custo Crash": act["Custo Crash"],
+                                "Crash Dur": act["Duração Crash"]
                             })
                         df_table = pd.DataFrame(table).sort_values("ES")
                         
@@ -796,13 +801,13 @@ def main():
                         
                         if budget > 0:
                             # Criar um mapa das atividades por ID
-                            acts_map = {act["Id"]: act for act in st.session_state.activities}  # MUDADO: "Id"
+                            acts_map = {act["Id"]: act for act in st.session_state.activities}
                             
                             # prepare mutable durations copy
-                            durations = {act["Id"]: act["te"] for act in st.session_state.activities}  # MUDADO: "Id"
+                            durations = {act["Id"]: act["te"] for act in st.session_state.activities}
                             remaining_budget = float(budget)
-                            spend = {act["Id"]: 0.0 for act in st.session_state.activities}  # MUDADO: "Id"
-                            reduction = {act["Id"]: 0.0 for act in st.session_state.activities}  # MUDADO: "Id"
+                            spend = {act["Id"]: 0.0 for act in st.session_state.activities}
+                            reduction = {act["Id"]: 0.0 for act in st.session_state.activities}
                             
                             # loop until budget exhausted or no reducible on critical path
                             iter_count = 0
@@ -818,9 +823,9 @@ def main():
                                 for aid in crit:
                                     act = acts_map[aid]
                                     curr = durations[aid]
-                                    min_possible = act["Duração Crash"]  # MUDADO: "Duração Crash"
+                                    min_possible = act["Duração Crash"]
                                     max_reduc = max(0.0, curr - min_possible)
-                                    cost_increase = max(0.0, act["Custo Crash"] - act["Custo Normal"])  # MUDADO: "Custo Crash" e "Custo Normal"
+                                    cost_increase = max(0.0, act["Custo Crash"] - act["Custo Normal"])
                                     # if no reducible, skip
                                     if max_reduc <= 1e-9 or cost_increase <= 0:
                                         continue
@@ -902,6 +907,10 @@ def main():
                         
                         else:
                             st.info("Insira um orçamento > 0 para simular crashing (redução de duração mediante custo).")
+                    
+                    # NO FINAL DO ARQUIVO (fora de qualquer if ou função):
+                    if should_rerun:
+                        st.rerun()
 
                 else:
                      if choice == menu[4]:
