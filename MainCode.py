@@ -914,21 +914,13 @@ def main():
 
                 else:
                      if choice == menu[4]:
-                        def gerar_pareto(df, coluna_problema, coluna_qtd):
-                            dados = df.groupby(coluna_problema)[coluna_qtd].sum().sort_values(ascending=False)
-                            cumul = dados.cumsum() / dados.sum() * 100
-                            return dados, cumul
-                        
-                        def gerar_grafico_controle(series):
-                            media = np.mean(series)
-                            std = np.std(series)
-                            UCL = media + 3*std
-                            LCL = media - 3*std
-                            return media, UCL, LCL
-                        
-                        # ============================
-                        # MENU LATERAL
-                        # ============================
+                        def text_to_df(text, colnames):
+                            lines = [l.strip() for l in text.strip().split("\n") if l.strip()]
+                            rows = [l.split(",") for l in lines]
+                            df = pd.DataFrame(rows, columns=colnames)
+                            for c in colnames[1:]:
+                                df[c] = pd.to_numeric(df[c], errors='coerce')
+                            return df
                         
                         st.title("📊 Ferramentas da Qualidade — App Interativo")
                         
@@ -937,115 +929,82 @@ def main():
                             ["Pareto & Estratificação", "CEP (Controle Estatístico)", "Histograma"]
                         )
                         
-                        # ============================
-                        # 1) PARETO & ESTRATIFICAÇÃO
-                        # ============================
-                        
+                        # 1) Pareto
                         if menu == "Pareto & Estratificação":
-                        
                             st.header("📌 Pareto e Estratificação")
                         
-                            st.write("Insira os dados contendo **Problema** e **Quantidade**.")
+                            st.write("Digite os dados no formato: **Problema,Quantidade**")
                         
-                            df_pareto = st.data_editor(
-                                pd.DataFrame({"Problema":[],"Quantidade":[]}),
-                                num_rows="dynamic",
-                                key="pareto_data"
-                            )
+                            default_text = """Falha A,10
+                        Falha B,25
+                        Falha C,5
+                        Falha D,18"""
                         
-                            if len(df_pareto) > 0 and df_pareto["Quantidade"].sum() > 0:
-                                dados, cumul = gerar_pareto(df_pareto, "Problema", "Quantidade")
+                            text_input = st.text_area("Dados (um por linha):", value=default_text, height=150)
+                        
+                            df = text_to_df(text_input, ["Problema", "Quantidade"])
+                        
+                            if df["Quantidade"].sum() > 0:
+                                df = df.groupby("Problema").sum().sort_values("Quantidade", ascending=False)
+                                cumul = df["Quantidade"].cumsum() / df["Quantidade"].sum() * 100
                         
                                 fig, ax1 = plt.subplots(figsize=(8,4))
-                                ax1.bar(dados.index, dados.values)
-                                ax1.set_ylabel("Frequência")
-                                ax1.tick_params(axis="x", rotation=45)
-                        
+                                ax1.bar(df.index, df["Quantidade"])
+                                ax1.set_xticklabels(df.index, rotation=45)
                                 ax2 = ax1.twinx()
-                                ax2.plot(dados.index, cumul.values, marker="o", linestyle="-")
-                                ax2.set_ylabel("% Acumulado")
+                                ax2.plot(df.index, cumul.values, marker="o")
                                 ax2.set_ylim(0, 110)
-                        
                                 st.pyplot(fig)
                         
-                                st.subheader("Dados Estratificados")
-                                st.dataframe(pd.DataFrame({"Frequência": dados, "% Acumulado": cumul}))
-                        
-                            else:
-                                st.info("Adicione dados na tabela para gerar o Pareto.")
-                        
-                        # ============================
-                        # 2) CEP (GRÁFICO DE CONTROLE)
-                        # ============================
-                        
+                        # 2) CEP
                         elif menu == "CEP (Controle Estatístico)":
+                            st.header("📌 CEP — Controle Estatístico do Processo")
                         
-                            st.header("📌 CEP — Gráfico de Controle")
+                            st.write("Digite valores numéricos separados por vírgula ou linha:")
                         
-                            st.write("Insira medições individuais do processo.")
+                            default_text = "10\n11\n9\n12\n10\n11\n13\n8\n10"
                         
-                            df_cep = st.data_editor(
-                                pd.DataFrame({"Valor":[]}),
-                                num_rows="dynamic",
-                                key="cep_data"
-                            )
+                            numbers_text = st.text_area("Valores:", value=default_text, height=150)
                         
-                            if len(df_cep) > 2:
-                                series = df_cep["Valor"].astype(float)
-                                media, UCL, LCL = gerar_grafico_controle(series)
+                            try:
+                                numbers = [float(x) for x in numbers_text.replace(",", "\n").split()]
+                            except:
+                                st.error("Erro ao converter os valores. Verifique o formato.")
+                                st.stop()
+                        
+                            if len(numbers) > 2:
+                                series = np.array(numbers)
+                                mean = np.mean(series)
+                                std = np.std(series)
+                                UCL = mean + 3*std
+                                LCL = mean - 3*std
                         
                                 fig, ax = plt.subplots(figsize=(8,4))
-                                ax.plot(series.values, marker="o")
-                                ax.axhline(media, color="green", linestyle="--", label="Média")
+                                ax.plot(series, marker="o")
+                                ax.axhline(mean, color="green", linestyle="--", label="Média")
                                 ax.axhline(UCL, color="red", linestyle="--", label="UCL (+3σ)")
                                 ax.axhline(LCL, color="red", linestyle="--", label="LCL (-3σ)")
-                                ax.set_title("Gráfico de Controle")
-                                ax.set_xlabel("Observação")
-                                ax.set_ylabel("Valor")
                                 ax.legend()
-                        
                                 st.pyplot(fig)
                         
-                                st.subheader("Resumo Estatístico")
-                                st.write(f"**Média:** {media:.2f}")
-                                st.write(f"**UCL:** {UCL:.2f}")
-                                st.write(f"**LCL:** {LCL:.2f}")
-                        
-                            else:
-                                st.info("Adicione pelo menos 3 valores.")
-                        
-                        # ============================
-                        # 3) HISTOGRAMA
-                        # ============================
-                        
+                        # 3) Histograma
                         elif menu == "Histograma":
-                        
                             st.header("📌 Histograma")
                         
-                            st.write("Insira valores numéricos para construir o histograma.")
+                            default_text = "10, 12, 11, 14, 9, 8, 7, 9, 10, 13"
                         
-                            df_hist = st.data_editor(
-                                pd.DataFrame({"Valor":[]}),
-                                num_rows="dynamic",
-                                key="hist_data"
-                            )
+                            numbers_text = st.text_area("Valores (vírgula ou quebra de linha):", value=default_text, height=150)
                         
-                            if len(df_hist) > 0:
-                                series = df_hist["Valor"].astype(float)
+                            try:
+                                values = [float(x) for x in numbers_text.replace(",", "\n").split()]
+                            except:
+                                st.error("Erro ao converter valores numéricos.")
+                                st.stop()
                         
-                                fig, ax = plt.subplots(figsize=(8,4))
-                                ax.hist(series, bins=10)
-                                ax.set_title("Histograma")
-                                ax.set_xlabel("Valor")
-                                ax.set_ylabel("Frequência")
-                        
-                                st.pyplot(fig)
-                        
-                                st.subheader("Estatísticas descritivas")
-                                st.write(series.describe())
-                        
-                            else:
-                                st.info("Adicione valores para gerar o histograma.")
+                            fig, ax = plt.subplots(figsize=(8,4))
+                            ax.hist(values, bins=10)
+                            st.pyplot(fig)
+                            st.write(pd.Series(values).describe())
                         
                      else:
                         st.header(menu[5])
