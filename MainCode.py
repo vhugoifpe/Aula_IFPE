@@ -632,6 +632,8 @@ def main():
                             "var_critical": var_sum
                         }
 
+                    budget = st.number_input("Orçamento disponível para crashing (R$)", min_value=0.0, value=0.0, step=100.0)
+
                     if st.button("Gerar resultados"):   
                         G = build_dag(st.session_state.activities, duration_key="te")
                         try:
@@ -790,7 +792,6 @@ def main():
                         # Crashing: receber budget e propor alocação
                         # --------------------------
                         st.subheader("💸 Crashing — Alocar budget para reduzir duração do projeto")
-                        budget = st.number_input("Orçamento disponível para crashing (R$)", min_value=0.0, value=0.0, step=100.0)
                         
                         if budget > 0:
                             # We'll perform greedy allocation on current critical path
