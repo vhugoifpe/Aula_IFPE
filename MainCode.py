@@ -914,400 +914,136 @@ def main():
 
                 else:
                      if choice == menu[4]:
+                        def gerar_pareto(df, coluna_problema, coluna_qtd):
+                            dados = df.groupby(coluna_problema)[coluna_qtd].sum().sort_values(ascending=False)
+                            cumul = dados.cumsum() / dados.sum() * 100
+                            return dados, cumul
                         
-                        if "occurrences" not in st.session_state:
-                            # occurrences: list of dicts with keys:
-                            # date, lote, operador, maquina, defeito, severidade, diametro, LSL, USL, turno
-                            st.session_state.occurrences = []
+                        def gerar_grafico_controle(series):
+                            media = np.mean(series)
+                            std = np.std(series)
+                            UCL = media + 3*std
+                            LCL = media - 3*std
+                            return media, UCL, LCL
                         
-                        if "five_whys" not in st.session_state:
-                            st.session_state.five_whys = {}  # key: defeito_id -> list of why answers
+                        # ============================
+                        # Layout principal
+                        # ============================
                         
-                        if "fmea" not in st.session_state:
-                            st.session_state.fmea = []  # list of dicts {defeito, S, O, D, RPN, action}
+                        st.title("📊 Ferramentas da Qualidade — App Interativo")
+                        st.write("Este aplicativo contém:")
+                        st.write("- **Pareto e Estratificação**")
+                        st.write("- **Gráficos de Controle (CEP)**")
+                        st.write("- **Histograma**")
                         
-                        # ------------------------------
-                        # Helper functions
-                        # ------------------------------
-                        def add_occurrence(rec):
-                            st.session_state.occurrences.append(rec)
+                        tabs = st.tabs(["Pareto & Estratificação", "CEP", "Histograma"])
                         
-                        def df_from_occurrences():
-                            if len(st.session_state.occurrences) == 0:
-                                return pd.DataFrame(columns=["date","lote","operador","maquina","defeito","severidade","diametro","LSL","USL","turno"])
-                            return pd.DataFrame(st.session_state.occurrences)
-                        
-                        def parse_uploaded_csv(uploaded):
-                            try:
-                                df = pd.read_csv(uploaded)
-                                # expect at least 'date' and 'defeito' or 'sales' etc.
-                                # normalize columns
-                                expected = ["date","lote","operador","maquina","defeito","severidade","diametro","LSL","USL","turno"]
-                                for col in expected:
-                                    if col not in df.columns:
-                                        df[col] = np.nan
-                                # convert types
-                                df["date"] = pd.to_datetime(df["date"], errors="coerce")
-                                return df[expected]
-                            except Exception as e:
-                                st.error(f"Erro ao ler CSV: {e}")
-                                return None
-                        
-                        def plot_pareto(df, defect_col="defeito"):
-                            freq = df[defect_col].fillna("Sem Info").value_counts()
-                            cumperc = freq.cumsum() / freq.sum() * 100
-                            fig, ax1 = plt.subplots(figsize=(8,4))
-                            ax1.bar(freq.index, freq.values)
-                            ax1.set_ylabel("Frequência")
-                            ax1.set_xticklabels(freq.index, rotation=45, ha="right")
-                            ax2 = ax1.twinx()
-                            ax2.plot(freq.index, cumperc.values, color="tab:orange", marker='o')
-                            ax2.set_ylabel("Acumulado (%)")
-                            ax2.axhline(80, color='red', linestyle='--', alpha=0.6)
-                            plt.tight_layout()
-                            return fig, freq, cumperc
-                        
-                        def plot_histogram_with_capability(df, measure_col="diametro", LSL=None, USL=None):
-                            vals = df[measure_col].dropna().astype(float)
-                            fig, ax = plt.subplots(figsize=(8,4))
-                            ax.hist(vals, bins=20, edgecolor='black')
-                            ax.set_xlabel(measure_col)
-                            ax.set_ylabel("Frequência")
-                            if LSL is not None and USL is not None and len(vals)>1:
-                                mu = np.mean(vals)
-                                sigma = np.std(vals, ddof=1)
-                                Cp = (USL - LSL) / (6*sigma) if sigma>0 else np.nan
-                                Cpk = min((USL-mu)/(3*sigma),(mu-LSL)/(3*sigma)) if sigma>0 else np.nan
-                                ax.axvline(LSL, color='red', linestyle='--', label='LSL')
-                                ax.axvline(USL, color='red', linestyle='--', label='USL')
-                                ax.legend()
-                                return fig, mu, sigma, Cp, Cpk
-                            else:
-                                return fig, None, None, None, None
-                        
-                        def xmR_chart(series, title="XmR Chart"):
-                            # series: pandas Series of readings (float)
-                            x = series.astype(float).reset_index(drop=True)
-                            # Moving Range
-                            mr = x.diff().abs().dropna()
-                            Xbar = x.mean()
-                            MRbar = mr.mean()
-                            # Control limits (common approximations)
-                            UCL_x = Xbar + 2.66 * MRbar
-                            LCL_x = Xbar - 2.66 * MRbar
-                            UCL_mr = 3.267 * MRbar
-                            LCL_mr = 0
-                            fig, (ax1, ax2) = plt.subplots(2,1, figsize=(10,5), sharex=True, gridspec_kw={'height_ratios':[2,1]})
-                            ax1.plot(x.index, x, marker='o')
-                            ax1.axhline(Xbar, color='green', label='X̄')
-                            ax1.axhline(UCL_x, color='red', linestyle='--', label='UCL')
-                            ax1.axhline(LCL_x, color='red', linestyle='--', label='LCL')
-                            ax1.set_title(title)
-                            ax1.legend()
-                            ax2.plot(mr.index, mr, marker='o', color='orange')
-                            ax2.axhline(MRbar, color='green', label='MR̄')
-                            ax2.axhline(UCL_mr, color='red', linestyle='--', label='UCL(MR)')
-                            ax2.set_title("Moving Range")
-                            ax2.legend()
-                            plt.tight_layout()
-                            return fig, {"Xbar":Xbar, "MRbar":MRbar, "UCL_x":UCL_x, "LCL_x":LCL_x, "UCL_mr":UCL_mr}
-                        
-                        # ------------------------------
-                        # Layout: input area (left) + tools (right)
-                        # ------------------------------
-                        st.sidebar.header("1) Inserir Ocorrência / Dados")
-                        input_method = st.sidebar.radio("Escolha como inserir ocorrências:", ("Manual (formulário)", "Upload CSV", "Gerar dataset simulado"))
-                        
-                        # Manual form
-                        if input_method == "Manual (formulário)":
-                            with st.sidebar.form("manual_form", clear_on_submit=True):
-                                date = st.date_input("Data")
-                                lote = st.text_input("Lote (opcional)", value="1")
-                                operador = st.text_input("Operador", value="Oper1")
-                                maquina = st.text_input("Máquina", value="M1")
-                                defeito = st.text_input("Tipo de defeito (ou 'Nenhum')", value="Nenhum")
-                                severidade = st.slider("Severidade (1-10)", 1, 10, 3)
-                                diametro = st.number_input("Medida contínua (ex: diâmetro)", value=30.00, step=0.01)
-                                LSL = st.number_input("LSL (opcional, 0 para vazio)", value=29.90, step=0.01)
-                                USL = st.number_input("USL (opcional, 0 para vazio)", value=30.10, step=0.01)
-                                turno = st.selectbox("Turno", ["Manhã","Tarde","Noite"])
-                                submit = st.form_submit_button("Adicionar ocorrência")
-                                if submit:
-                                    rec = {
-                                        "date": pd.to_datetime(date),
-                                        "lote": lote,
-                                        "operador": operador,
-                                        "maquina": maquina,
-                                        "defeito": defeito,
-                                        "severidade": int(severidade),
-                                        "diametro": float(diametro),
-                                        "LSL": float(LSL) if LSL!=0 else np.nan,
-                                        "USL": float(USL) if USL!=0 else np.nan,
-                                        "turno": turno
-                                    }
-                                    add_occurrence(rec)
-                                    st.success("Ocorrência adicionada.")
-                        
-                        # CSV upload
-                        elif input_method == "Upload CSV":
-                            uploaded = st.sidebar.file_uploader("Envie um CSV com colunas: date,lote,operador,maquina,defeito,severidade,diametro,LSL,USL,turno", type=["csv"])
-                            if uploaded is not None:
-                                df_up = parse_uploaded_csv(uploaded)
-                                if df_up is not None:
-                                    # append to occurrences
-                                    for _, r in df_up.iterrows():
-                                        rec = {
-                                            "date": pd.to_datetime(r["date"]),
-                                            "lote": r["lote"],
-                                            "operador": r["operador"],
-                                            "maquina": r["maquina"],
-                                            "defeito": r["defeito"],
-                                            "severidade": int(r["severidade"]) if not pd.isna(r["severidade"]) else 1,
-                                            "diametro": float(r["diametro"]) if not pd.isna(r["diametro"]) else np.nan,
-                                            "LSL": float(r["LSL"]) if not pd.isna(r["LSL"]) else np.nan,
-                                            "USL": float(r["USL"]) if not pd.isna(r["USL"]) else np.nan,
-                                            "turno": r["turno"]
-                                        }
-                                        add_occurrence(rec)
-                                    st.success("CSV importado com sucesso.")
-                        
-                        # Simulate dataset
-                        else:
-                            st.sidebar.write("Gerar dataset simulado (rápido para testes)")
-                            ndays = st.sidebar.number_input("dias (simulado)", min_value=7, max_value=60, value=30)
-                            per_day = st.sidebar.slider("ocorrências por dia (média)", 1, 20, 6)
-                            gen = st.sidebar.button("Gerar dataset simulado")
-                            if gen:
-                                st.session_state.occurrences = []  # reset
-                                rng = np.random.default_rng(42)
-                                defect_types = ["Rebarba", "Trinca", "Falha Pintura", "Desgaste", "Rugosidade", "Nenhum"]
-                                máquinas = ["M1","M2","M3"]
-                                operadores = ["João","Maria","Ana","Carlos"]
-                                for d in pd.date_range(end=pd.Timestamp.today(), periods=ndays):
-                                    n = max(1, int(rng.normal(per_day, per_day/3)))
-                                    for i in range(n):
-                                        defeito = rng.choice(defect_types, p=[0.15,0.08,0.07,0.05,0.03,0.62])
-                                        diam = 30 + rng.normal(0,0.08)
-                                        rec = {
-                                            "date": d,
-                                            "lote": f"{d.strftime('%Y%m%d')}-{i//5}",
-                                            "operador": rng.choice(operadores),
-                                            "maquina": rng.choice(máquinas),
-                                            "defeito": defeito,
-                                            "severidade": int(rng.integers(1,8)) if defeito!="Nenhum" else 1,
-                                            "diametro": round(diam,3),
-                                            "LSL": 29.90,
-                                            "USL": 30.10,
-                                            "turno": rng.choice(["Manhã","Tarde","Noite"])
-                                        }
-                                        add_occurrence(rec)
-                                st.success("Dataset simulado criado.")
-                        
-                        # ------------------------------
-                        # Main area: tabs for tools
-                        # ------------------------------
-                        df_all = df_from_occurrences()
-                        st.sidebar.markdown("---")
-                        st.sidebar.write(f"Total ocorrências: **{len(df_all)}**")
-                        if len(df_all)==0:
-                            st.info("Insira ocorrências para habilitar as ferramentas.")
-                            st.stop()
-                        
-                        tabs = st.tabs(["Visão Geral","Pareto & Estratificação","CEP & Histograma","Ishikawa & 5 Porquês","FMEA & 5W2H","Folha de Verificação","Exportar / Limpar"])
-                        
-                        # ------------------------------
-                        # Tab 1: Visão Geral
-                        # ------------------------------
+                        # ============================
+                        # 1) PARETO E ESTRATIFICAÇÃO
+                        # ============================
                         with tabs[0]:
-                            st.header("📋 Visão Geral dos Dados")
-                            st.write("Tabela (filtre clicando nos cabeçalhos):")
-                            st.dataframe(df_all.sort_values("date").reset_index(drop=True))
-                            st.markdown("**Resumo rápido**")
-                            col1,col2,col3 = st.columns(3)
-                            col1.metric("Ocorrências totais", len(df_all))
-                            col2.metric("Tipos de defeito", df_all["defeito"].nunique())
-                            col3.metric("Máquinas", df_all["maquina"].nunique())
                         
-                            st.markdown("**Contagens por defeito (top 10)**")
-                            st.bar_chart(df_all["defeito"].value_counts().head(10))
+                            st.header("📌 Pareto e Estratificação")
                         
-                        # ------------------------------
-                        # Tab 2: Pareto & Estratificação
-                        # ------------------------------
+                            st.write("Insira os dados como uma tabela contendo *Problema* e *Quantidade*.")
+                        
+                            df_pareto = st.data_editor(
+                                pd.DataFrame({"Problema":[],"Quantidade":[]}),
+                                num_rows="dynamic",
+                                key="pareto_data"
+                            )
+                        
+                            if len(df_pareto) > 0 and df_pareto["Quantidade"].sum() > 0:
+                                dados, cumul = gerar_pareto(df_pareto, "Problema", "Quantidade")
+                        
+                                fig, ax1 = plt.subplots(figsize=(8,4))
+                                ax1.bar(dados.index, dados.values)
+                                ax1.set_ylabel("Frequência")
+                                ax1.tick_params(axis="x", rotation=45)
+                        
+                                ax2 = ax1.twinx()
+                                ax2.plot(dados.index, cumul.values, marker="o", linestyle="-")
+                                ax2.set_ylabel("% Acumulado")
+                                ax2.set_ylim(0, 110)
+                        
+                                st.pyplot(fig)
+                        
+                                st.subheader("Dados Estratificados:")
+                                st.dataframe(pd.DataFrame({"Frequência": dados, "% Acumulado": cumul}))
+                        
+                            else:
+                                st.info("Adicione dados na tabela para gerar o Pareto.")
+                        
+                        # ============================
+                        # 2) CEP (Controle Estatístico do Processo)
+                        # ============================
                         with tabs[1]:
-                            st.header("📊 Pareto & Estratificação")
-                            st.write("Escolha a coluna para Pareto / estratificação:")
-                            col_option = st.selectbox("Agrupar por:", ["defeito","maquina","operador","turno"])
-                            fig_p, freq, cumperc = plot_pareto(df_all, defect_col=col_option)
-                            st.pyplot(fig_p)
-                            st.write("Tabela com frequência e % acumulado:")
-                            df_pareto = pd.DataFrame({"freq":freq, "acum%": cumperc})
-                            st.dataframe(df_pareto.reset_index().rename(columns={"index":col_option}))
-                            # interactive: selecionar top causes to include in Ishikawa
-                            st.markdown("Selecione causas principais para Ishikawa (opcional):")
-                            top_selection = st.multiselect("Causas (usar para Ishikawa)", list(freq.index[:10]))
-                            if top_selection:
-                                st.write("Causas selecionadas:", top_selection)
                         
-                        # ------------------------------
-                        # Tab 3: CEP & Histograma
-                        # ------------------------------
+                            st.header("📌 CEP — Gráfico de Controle")
+                        
+                            st.write("Insira medições individuais para o processo monitorado.")
+                        
+                            df_cep = st.data_editor(
+                                pd.DataFrame({"Valor":[]}),
+                                num_rows="dynamic",
+                                key="cep_data"
+                            )
+                        
+                            if len(df_cep) > 2:
+                                series = df_cep["Valor"].astype(float)
+                                media, UCL, LCL = gerar_grafico_controle(series)
+                        
+                                fig, ax = plt.subplots(figsize=(8,4))
+                                ax.plot(series.values, marker="o")
+                                ax.axhline(media, color="green", linestyle="--", label="Média")
+                                ax.axhline(UCL, color="red", linestyle="--", label="UCL (+3σ)")
+                                ax.axhline(LCL, color="red", linestyle="--", label="LCL (-3σ)")
+                                ax.set_title("Gráfico de Controle")
+                                ax.set_xlabel("Observação")
+                                ax.set_ylabel("Valor")
+                                ax.legend()
+                        
+                                st.pyplot(fig)
+                        
+                                st.subheader("Resumo Estatístico")
+                                st.write(f"**Média:** {media:.2f}")
+                                st.write(f"**UCL:** {UCL:.2f}")
+                                st.write(f"**LCL:** {LCL:.2f}")
+                        
+                            else:
+                                st.info("Adicione pelo menos 3 valores para gerar o gráfico de controle.")
+                        
+                        # ============================
+                        # 3) HISTOGRAMA
+                        # ============================
                         with tabs[2]:
-                            st.header("📈 CEP (XmR) e Histograma / Capabilidade")
-                            st.write("Escolha uma variável contínua para análise (se disponível):")
-                            measure_col = st.selectbox("Variável:", ["diametro"], index=0)
-                            df_meas = df_all[[measure_col]].dropna()
-                            if df_meas.empty:
-                                st.warning("Nenhuma medida contínua disponível.")
+                        
+                            st.header("📌 Histograma")
+                        
+                            st.write("Insira os dados individuais para gerar o histograma.")
+                        
+                            df_hist = st.data_editor(
+                                pd.DataFrame({"Valor":[]}),
+                                num_rows="dynamic",
+                                key="hist_data"
+                            )
+                        
+                            if len(df_hist) > 0:
+                                series = df_hist["Valor"].astype(float)
+                        
+                                fig, ax = plt.subplots(figsize=(8,4))
+                                ax.hist(series, bins=10)
+                                ax.set_title("Histograma")
+                                ax.set_xlabel("Valor")
+                                ax.set_ylabel("Frequência")
+                        
+                                st.pyplot(fig)
+                        
+                                st.subheader("Estatísticas")
+                                st.write(series.describe())
+                        
                             else:
-                                # XmR
-                                st.subheader("Carta XmR")
-                                fig_xmr, stats_xmr = xmR_chart(df_all[measure_col])
-                                st.pyplot(fig_xmr)
-                                st.write("Estatísticas:", stats_xmr)
-                        
-                                # Histogram + capability (if LSL/USL consistent)
-                                st.subheader("Histograma e Capabilidade")
-                                LSL_vals = df_all["LSL"].dropna().unique()
-                                USL_vals = df_all["USL"].dropna().unique()
-                                LSL_in = float(LSL_vals[0]) if len(LSL_vals)>0 else None
-                                USL_in = float(USL_vals[0]) if len(USL_vals)>0 else None
-                                fig_hist, mu, sigma, Cp, Cpk = plot_histogram_with_capability(df_all, measure_col, LSL_in, USL_in)
-                                st.pyplot(fig_hist)
-                                if Cp is not None:
-                                    st.write(f"μ={mu:.3f}, σ={sigma:.3f}, Cp={Cp:.3f}, Cpk={Cpk:.3f}")
-                                else:
-                                    st.info("Insira LSL e USL para calcular Cp/Cpk.")
-                        
-                        # ------------------------------
-                        # Tab 4: Ishikawa & 5 Porquês
-                        # ------------------------------
-                        with tabs[3]:
-                            st.header("🧠 Ishikawa (Diagrama de Causa) & 5 Porquês")
-                            st.write("Categorias padrão (6Ms): Máquina, Método, Material, Mão de obra, Medição, Meio ambiente")
-                            # automatic mapping by operator/maquina etc.
-                            st.subheader("Ishikawa automático (resumo por categoria)")
-                            # build counts per category using user-supplied 'defeito' and a mapping input
-                            st.write("Você pode atribuir categorias para cada defeito (isso alimenta o diagrama).")
-                            unique_defects = df_all["defeito"].fillna("Sem Info").unique().tolist()
-                            mapping = {}
-                            with st.form("map_defects", clear_on_submit=False):
-                                cols = st.columns(2)
-                                for d in unique_defects:
-                                    cat = cols[0].selectbox(f"Categoria para '{d}'", ["Máquina","Método","Material","Mão de obra","Medição","Meio ambiente","Outros"], key=f"cat_{d}")
-                                    mapping[d] = cat
-                                sub = st.form_submit_button("Aplicar categorias")
-                            # show summary
-                            if mapping:
-                                df_all["categoria"] = df_all["defeito"].map(mapping).fillna("Outros")
-                            else:
-                                df_all["categoria"] = "Outros"
-                            cat_counts = df_all["categoria"].value_counts()
-                            st.bar_chart(cat_counts)
-                            st.markdown("**Ishikawa (texto estruturado)**")
-                            for cat in ["Máquina","Método","Material","Mão de obra","Medição","Meio ambiente","Outros"]:
-                                itens = df_all[df_all["categoria"]==cat]["defeito"].unique().tolist()
-                                st.markdown(f"**{cat}** — {', '.join([str(x) for x in itens if x!='nan'])}")
-                        
-                            st.subheader("5 Porquês (interativo)")
-                            defect_for_5w = st.selectbox("Escolha o defeito para aplicar 5 Porquês:", unique_defects)
-                            if st.button("Iniciar 5 Porquês"):
-                                st.session_state.five_whys[defect_for_5w] = [""]*5
-                            if defect_for_5w in st.session_state.five_whys:
-                                answers = st.session_state.five_whys[defect_for_5w]
-                                for i in range(5):
-                                    answers[i] = st.text_input(f"Por quê #{i+1} (resposta atual: '{answers[i]}')", value=answers[i], key=f"why_{defect_for_5w}_{i}")
-                                if st.button("Salvar 5 Porquês"):
-                                    st.session_state.five_whys[defect_for_5w] = answers
-                                    st.success("5 Porquês salvos.")
-                                st.write("Respostas atuais:")
-                                for i,a in enumerate(answers,1):
-                                    st.write(f"{i}. {a}")
-                        
-                        # ------------------------------
-                        # Tab 5: FMEA & 5W2H
-                        # ------------------------------
-                        with tabs[4]:
-                            st.header("⚠️ FMEA simplificado e 5W2H")
-                            st.write("Defina RPN (S×O×D) para cada defeito tipo / situação e gere plano de ação.")
-                            st.subheader("Adicionar item FMEA")
-                            with st.form("fmea_form", clear_on_submit=True):
-                                defeito_f = st.selectbox("Defeito", df_all["defeito"].unique())
-                                S = st.slider("Severidade (S) 1-10", 1, 10, 5)
-                                O = st.slider("Ocorrência (O) 1-10", 1, 10, 5)
-                                D = st.slider("Detecção (D) 1-10", 1, 10, 5)
-                                action = st.text_input("Ação recomendada (breve)")
-                                add_fmea = st.form_submit_button("Adicionar FMEA")
-                                if add_fmea:
-                                    rpn = S*O*D
-                                    st.session_state.fmea.append({"defeito":defeito_f,"S":S,"O":O,"D":D,"RPN":rpn,"action":action})
-                                    st.success("Item FMEA adicionado.")
-                            if len(st.session_state.fmea)>0:
-                                df_fmea = pd.DataFrame(st.session_state.fmea).sort_values("RPN", ascending=False)
-                                st.dataframe(df_fmea)
-                                top_rpn = df_fmea.head(3)
-                                st.markdown("**Top riscos (maior RPN)**")
-                                st.table(top_rpn)
-                        
-                            st.subheader("Gerar 5W2H para ação")
-                            if len(st.session_state.fmea)==0:
-                                st.info("Adicione um item FMEA antes de gerar 5W2H.")
-                            else:
-                                pick_index = st.number_input("Escolha índice do item FMEA para gerar 5W2H (índice da tabela acima)", min_value=0, max_value=len(st.session_state.fmea)-1, value=0)
-                                item = st.session_state.fmea[pick_index]
-                                with st.form("fivew2h_form", clear_on_submit=False):
-                                    what = st.text_input("What", value=f"Ação para {item['defeito']}")
-                                    why = st.text_input("Why", value=item.get("action",""))
-                                    where = st.text_input("Where", value="Linha de montagem X")
-                                    when = st.date_input("When")
-                                    who = st.text_input("Who", value="Equipe de manutenção")
-                                    how = st.text_input("How", value="Executar procedimento Y")
-                                    how_much = st.number_input("How much (R$)", value=0.0)
-                                    gen5w2h = st.form_submit_button("Gerar 5W2H")
-                                    if gen5w2h:
-                                        df_5w2h = pd.DataFrame([{"What":what,"Why":why,"Where":where,"When":str(when),"Who":who,"How":how,"How much":how_much}])
-                                        st.table(df_5w2h)
-                                        st.success("5W2H gerado.")
-                        
-                        # ------------------------------
-                        # Tab 6: Folha de Verificação
-                        # ------------------------------
-                        with tabs[5]:
-                            st.header("🗂️ Folha de Verificação (Checksheet)")
-                            st.write("Aqui você pode montar uma folha de verificação a partir dos defeitos registrados e gerar uma tabela por período.")
-                            defects_list = df_all["defeito"].fillna("Sem Info").unique().tolist()
-                            date_from = st.date_input("De", value=df_all["date"].min().date())
-                            date_to = st.date_input("Até", value=df_all["date"].max().date())
-                            if date_from > date_to:
-                                st.error("Intervalo inválido")
-                            else:
-                                mask = (df_all["date"].dt.date >= date_from) & (df_all["date"].dt.date <= date_to)
-                                df_slice = df_all[mask]
-                                if df_slice.empty:
-                                    st.info("Nenhuma ocorrência no período selecionado.")
-                                else:
-                                    pivot = pd.crosstab(df_slice["date"].dt.date, df_slice["defeito"])
-                                    st.dataframe(pivot)
-                                    st.download_button("Download CSV da folha de verificação", data=pivot.to_csv().encode('utf-8'), file_name="folha_verificacao.csv")
-                        
-                        # ------------------------------
-                        # Tab 7: Exportar / Limpar
-                        # ------------------------------
-                        with tabs[6]:
-                            st.header("🔁 Exportar / Limpar dados")
-                            if not df_all.empty:
-                                csv = df_all.to_csv(index=False).encode('utf-8')
-                                st.download_button("Baixar dados (CSV)", data=csv, file_name="ocorrencias_qualidade.csv")
-                            if st.button("Limpar todas ocorrências"):
-                                st.session_state.occurrences = []
-                                st.success("Dados limpos.")
-                            if st.button("Limpar FMEA e 5 Porquês"):
-                                st.session_state.fmea = []
-                                st.session_state.five_whys = {}
-                                st.success("FMEA e 5 Porquês limpos.")
-                        
-                        st.markdown("---")
-                        st.caption("App educativo para praticar ferramentas da qualidade. Desenvolvido para uso em sala de aula — personalize as categorias, defeitos e entradas para criar cenários reais.")
+                                st.info("Adicione valores para gerar o histograma.")
 
                         
                      else:
