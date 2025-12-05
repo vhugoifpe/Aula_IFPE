@@ -542,6 +542,8 @@ def main():
                     def next_activity_name():
                         n = len(st.session_state.activities)
                         return chr(ord("A") + n)
+
+                    should_rerun=False
                     
                     with st.sidebar.form("add_activity", clear_on_submit=True):
                         st.header("➕ Adicionar Atividade")
