@@ -534,16 +534,316 @@ def main():
             #####################################################################################################################################################################
             #####################################################################################################################################################################
             else:
-                if choice == menu[6]:
-                    st.header(menu[6])
-                    st.write("<h6 style='text-align: justify; color: Blue Jay;'>Estes aplicativos são referente à aula do dia 13/12/2025.</h6>", unsafe_allow_html=True)
-                    st.write("<h6 style='text-align: justify; color: Blue Jay;'>Para mais informações, dúvidas e sugestões, por favor contacte nos e-mails abaixo:</h6>", unsafe_allow_html=True)
+                if choice == menu[3]:
+                    if "activities" not in st.session_state:
+                        # activities: list of dicts with keys:
+                        # id (A,B...), a, m, b, te, var, cost_normal, cost_crash, crash_duration, deps (list)
+                        st.session_state.activities = []
                     
-                    st.write('''
-            victor.lima@ifpe.edu.br
-            
-            vhugoreslim@gmail.com
-            ''' .format(chr(948), chr(948), chr(948), chr(948), chr(948)))       
+                    def next_activity_name():
+                        n = len(st.session_state.activities)
+                        return chr(ord("A") + n)
+                    
+                    # --------------------------
+                    # Sidebar: adicionar atividade
+                    # --------------------------
+                    with st.sidebar.form("add_activity", clear_on_submit=True):
+                        st.header("➕ Adicionar Atividade")
+                        a = st.number_input("Tempo otimista (a)", min_value=0.0, value=1.0, step=0.5)
+                        m = st.number_input("Tempo mais provável (m)", min_value=0.0, value=5.0, step=0.5)
+                        b = st.number_input("Tempo pessimista (b)", min_value=0.0, value=9.0, step=0.5)
+                        cost_normal = st.number_input("Custo normal (R$)", min_value=0.0, value=1000.0, step=100.0)
+                        cost_crash = st.number_input("Custo em crashing (R$) - custo total após crash", min_value=0.0, value=2000.0, step=100.0)
+                        crash_duration = st.number_input("Duração mínima possível após crash (tempo)", min_value=0.0, value=2.0, step=0.5)
+                        # dependencies selection from existing names
+                        existing = [act["id"] for act in st.session_state.activities]
+                        deps = st.multiselect("Dependências (atividades que devem terminar antes)", options=existing)
+                        add = st.form_submit_button("Adicionar Atividade")
+                        if add:
+                            # validate times
+                            if not (a <= m <= b):
+                                st.error("Valide: precisa ser a ≤ m ≤ b")
+                            elif crash_duration > m:
+                                st.error("Duração mínima após crash não pode ser maior que m (duração típica).")
+                            else:
+                                te = (a + 4*m + b) / 6.0
+                                var = ((b - a) / 6.0) ** 2
+                                act = {
+                                    "id": next_activity_name(),
+                                    "a": float(a),
+                                    "m": float(m),
+                                    "b": float(b),
+                                    "te": float(te),
+                                    "var": float(var),
+                                    "cost_normal": float(cost_normal),
+                                    "cost_crash": float(cost_crash),
+                                    "crash_duration": float(crash_duration),
+                                    "deps": list(deps)
+                                }
+                                st.session_state.activities.append(act)
+                                st.success(f"Atividade {act['id']} adicionada.")
+                    
+                    # --------------------------
+                    # Main layout: atividades
+                    # --------------------------
+                    st.header("📋 Atividades cadastradas")
+                    if len(st.session_state.activities) == 0:
+                        st.info("Nenhuma atividade cadastrada. Adicione atividades pelo painel lateral.")
+                        st.stop()
+                    
+                    df_acts = pd.DataFrame(st.session_state.activities)
+                    st.dataframe(df_acts[["id", "a", "m", "b", "te", "var", "cost_normal", "cost_crash", "crash_duration", "deps"]])
+                    
+                    # --------------------------
+                    # Funções: construir DAG, CPM
+                    # --------------------------
+                    def build_dag(activities, duration_key="te"):
+                        G = nx.DiGraph()
+                        for act in activities:
+                            G.add_node(act["id"], duration=act[duration_key], var=act["var"])
+                        for act in activities:
+                            for p in act["deps"]:
+                                G.add_edge(p, act["id"])
+                        return G
+                    
+                    def compute_cpm(G):
+                        # Ensure DAG
+                        if not nx.is_directed_acyclic_graph(G):
+                            raise ValueError("O grafo de dependências contém ciclos. Remova dependências circulares.")
+                        topo = list(nx.topological_sort(G))
+                        ES = {n:0.0 for n in G.nodes()}
+                        EF = {}
+                        for n in topo:
+                            dur = G.nodes[n]["duration"]
+                            es = max([EF[p] for p in G.predecessors(n)], default=0.0)
+                            ES[n] = es
+                            EF[n] = es + dur
+                        project_duration = max(EF.values())
+                        # backward
+                        LF = {n:project_duration for n in G.nodes()}
+                        LS = {}
+                        for n in reversed(topo):
+                            dur = G.nodes[n]["duration"]
+                            lf = min([LS[s] for s in G.successors(n)], default=project_duration)
+                            LF[n] = lf
+                            LS[n] = lf - dur
+                        slack = {n: round(LS[n]-ES[n],6) for n in G.nodes()}
+                        critical_path = [n for n in G.nodes() if abs(slack[n]) < 1e-6]
+                        # compute variances along critical path
+                        var_sum = sum(G.nodes[n]["var"] for n in critical_path)
+                        return {
+                            "ES": ES, "EF": EF, "LS": LS, "LF": LF, "slack": slack,
+                            "duration": project_duration,
+                            "critical_path": critical_path,
+                            "var_critical": var_sum
+                        }
+                    
+                    # --------------------------
+                    # Build graph and compute CPM
+                    # --------------------------
+                    G = build_dag(st.session_state.activities, duration_key="te")
+                    try:
+                        cpm = compute_cpm(G)
+                    except ValueError as e:
+                        st.error(str(e))
+                        st.stop()
+                    
+                    st.subheader("📈 Resultados CPM / PERT")
+                    st.write(f"⏱️ Duração esperada do projeto (µ): **{cpm['duration']:.2f}** unidades de tempo")
+                    st.write(f"📌 Atividades críticas: {', '.join(cpm['critical_path'])}")
+                    st.write(f"σ² (soma das variâncias no caminho crítico): {cpm['var_critical']:.4f}")
+                    
+                    # --------------------------
+                    # Show table with ES/EF/LS/LF/slack and durations
+                    # --------------------------
+                    table = []
+                    for act in st.session_state.activities:
+                        idn = act["id"]
+                        table.append({
+                            "Atividade": idn,
+                            "Duração (te)": G.nodes[idn]["duration"],
+                            "ES": cpm["ES"][idn],
+                            "EF": cpm["EF"][idn],
+                            "LS": cpm["LS"][idn],
+                            "LF": cpm["LF"][idn],
+                            "Folga": cpm["slack"][idn],
+                            "Custo normal": act["cost_normal"],
+                            "Custo crash": act["cost_crash"],
+                            "Crash dur": act["crash_duration"]
+                        })
+                    df_table = pd.DataFrame(table).sort_values("ES")
+                    st.dataframe(df_table.style.format({"Duração (te)": "{:.2f}", "ES":"{:.2f}", "EF":"{:.2f}", "LS":"{:.2f}", "LF":"{:.2f}", "Folga":"{:.2f}"}), use_container_width=True)
+                    
+                    # --------------------------
+                    # Gantt chart
+                    # --------------------------
+                    st.subheader("📅 Gráfico de Gantt")
+                    fig, ax = plt.subplots(figsize=(10, max(4, len(st.session_state.activities)*0.6)))
+                    y_pos = np.arange(len(df_table))
+                    colors = []
+                    for i, row in df_table.iterrows():
+                        act = row["Atividade"]
+                        start = row["ES"]
+                        duration = row["Duração (te)"]
+                        color = "tab:red" if abs(row["Folga"])<1e-6 else "tab:blue"
+                        colors.append(color)
+                        ax.barh(act, duration, left=start, height=0.4, color=color, edgecolor="black")
+                        ax.text(start + duration/2, act, f"{duration:.2f}", va='center', ha='center', color='white', fontsize=8)
+                    ax.set_xlabel("Tempo")
+                    ax.set_yticks(y_pos)
+                    ax.set_yticklabels(df_table["Atividade"])
+                    ax.invert_yaxis()
+                    ax.grid(axis='x', linestyle=':', alpha=0.6)
+                    st.pyplot(fig)
+                    
+                    # --------------------------
+                    # Fluxograma (grafo) - networkx
+                    # --------------------------
+                    st.subheader("🔀 Fluxograma (Rede de Atividades)")
+                    plt.figure(figsize=(8,5))
+                    pos = nx.spring_layout(G, seed=42)
+                    node_colors = ["red" if n in cpm["critical_path"] else "skyblue" for n in G.nodes()]
+                    nx.draw(G, pos, with_labels=True, node_color=node_colors, node_size=1200, arrowsize=18, font_weight='bold')
+                    st.pyplot(plt.gcf())
+                    
+                    # --------------------------
+                    # Probabilidade de cumprir deadline (PERT)
+                    # --------------------------
+                    st.subheader("📉 Avaliação Probabilística (PERT)")
+                    deadline = st.number_input("Prazo desejado (unidades de tempo) — comparar com duração esperada", min_value=0.0, value=float(cpm["duration"]))
+                    mu = cpm["duration"]
+                    sigma = sqrt(cpm["var_critical"]) if cpm["var_critical"]>0 else 1e-6
+                    z = (deadline - mu) / sigma
+                    # normal CDF via erf
+                    prob = 0.5 * (1 + erf(z / sqrt(2)))
+                    st.write(f"Média (µ) = {mu:.2f}  •  Desvio padrão (σ) = {sigma:.3f}")
+                    st.write(f"Probabilidade aproximada de terminar até {deadline:.2f} = **{prob*100:.2f}%**")
+                    
+                    # plot normal curve with marker
+                    x = np.linspace(mu - 4*sigma, mu + 4*sigma, 200)
+                    pdf = (1/ (sigma * sqrt(2*np.pi))) * np.exp(-0.5*((x-mu)/sigma)**2)
+                    fig2, ax2 = plt.subplots(figsize=(8,3))
+                    ax2.plot(x, pdf, label="Distribuição Normal aproximada do tempo do projeto")
+                    ax2.axvline(deadline, color='red', linestyle='--', label=f"Deadline ({deadline})")
+                    ax2.fill_between(x, 0, pdf, where=(x<=deadline), color='green', alpha=0.25)
+                    ax2.set_xlabel("Tempo total do projeto")
+                    ax2.legend()
+                    st.pyplot(fig2)
+                    
+                    # --------------------------
+                    # Crashing: receber budget e propor alocação
+                    # --------------------------
+                    st.subheader("💸 Crashing — Alocar budget para reduzir duração do projeto")
+                    budget = st.number_input("Orçamento disponível para crashing (R$)", min_value=0.0, value=0.0, step=100.0)
+                    
+                    if budget > 0:
+                        # We'll perform greedy allocation on current critical path
+                        # For each act on critical path compute: normal_dur, crash_dur, max_reduction, cost_increase, slope = cost_increase / max_reduction
+                        # Note: treat crash cost as total cost after crashing; cost increase = cost_crash - cost_normal
+                        acts_map = {act["id"]: act for act in st.session_state.activities}
+                        # prepare mutable durations copy
+                        durations = {act["id"]: act["te"] for act in st.session_state.activities}
+                        remaining_budget = float(budget)
+                        spend = {act["id"]: 0.0 for act in st.session_state.activities}
+                        reduction = {act["id"]: 0.0 for act in st.session_state.activities}
+                        # loop until budget exhausted or no reducible on critical path
+                        iter_count = 0
+                        while remaining_budget > 0 and iter_count < 500:
+                            # build graph with current durations
+                            for n in G.nodes():
+                                G.nodes[n]["duration"] = durations[n]
+                            cpm_now = compute_cpm(G)
+                            crit = cpm_now["critical_path"]
+                            # candidate activities on critical path with possible reduction left
+                            candidates = []
+                            for aid in crit:
+                                act = acts_map[aid]
+                                curr = durations[aid]
+                                min_possible = act["crash_duration"]
+                                max_reduc = max(0.0, curr - min_possible)
+                                cost_increase = max(0.0, act["cost_crash"] - act["cost_normal"])
+                                # if no reducible, skip
+                                if max_reduc <= 1e-9 or cost_increase <= 0:
+                                    continue
+                                slope = cost_increase / max_reduc  # cost per unit time reduced
+                                candidates.append((slope, aid, max_reduc, cost_increase, curr, min_possible))
+                            if not candidates:
+                                break
+                            # pick lowest slope
+                            candidates.sort(key=lambda x: x[0])
+                            slope, aid, max_reduc, cost_increase, curr, min_possible = candidates[0]
+                            # How much can we reduce given remaining budget?
+                            # cost per unit = slope; allocate either full reduction or budget-limited
+                            max_affordable_reduction = remaining_budget / slope if slope>0 else max_reduc
+                            reduce_by = min(max_reduc, max_affordable_reduction)
+                            if reduce_by <= 1e-9:
+                                break
+                            # compute proportional cost based on reduction fraction
+                            cost_for_this = slope * reduce_by
+                            # apply
+                            durations[aid] = durations[aid] - reduce_by
+                            remaining_budget -= cost_for_this
+                            spend[aid] += cost_for_this
+                            reduction[aid] += reduce_by
+                            iter_count += 1
+                        # after allocation compute final cpm
+                        for n in G.nodes():
+                            G.nodes[n]["duration"] = durations[n]
+                        cpm_after = compute_cpm(G)
+                        new_duration = cpm_after["duration"]
+                        total_spent = budget - remaining_budget
+                        st.write(f"Orçamento inicial: R$ {budget:.2f} • Gasto total: R$ {total_spent:.2f} • Orçamento restante: R$ {remaining_budget:.2f}")
+                        st.write(f"⏱️ Duração antes: {mu:.2f} → Duração após crashing: {new_duration:.2f} (redução {mu - new_duration:.2f})")
+                        # show allocation table
+                        alloc = []
+                        for aid in spend:
+                            if spend[aid] > 0:
+                                alloc.append({"Atividade": aid, "Gasto (R$)": spend[aid], "Redução tempo": reduction[aid], "Nova duração": durations[aid]})
+                        if alloc:
+                            st.subheader("🧾 Alocação do orçamento (atividades otimizadas)")
+                            st.table(pd.DataFrame(alloc).round(3))
+                        else:
+                            st.info("Orçamento insuficiente para realizar redução (ou atividades não têm custo de crashing definido).")
+                    
+                        # show new gantt compare before/after
+                        st.subheader("📅 Gantt — Antes e Depois (apenas duração mostrada)")
+                        df_before = df_table.copy()
+                        df_before = df_before.set_index("Atividade")
+                        df_after = df_before.copy()
+                        for i,row in df_after.iterrows():
+                            df_after.at[i,"Duração (te)"] = durations[i]
+                        # plot comparative bars
+                        fig3, ax3 = plt.subplots(figsize=(10, max(4, len(df_after)*0.6)))
+                        y_pos = np.arange(len(df_before))
+                        for idx,i in enumerate(df_before.index):
+                            start_before = df_before.loc[i,"ES"]
+                            dur_before = df_before.loc[i,"Duração (te)"]
+                            dur_after = df_after.loc[i,"Duração (te)"]
+                            ax3.barh(i, dur_before, left=start_before, height=0.35, color='lightgray', edgecolor='black')
+                            ax3.barh(i, dur_after, left=start_before, height=0.2, color='tab:green', edgecolor='black')
+                            ax3.text(start_before + dur_after + 0.02, i, f"-{dur_before-dur_after:.2f}", va='center')
+                        ax3.invert_yaxis()
+                        ax3.set_xlabel("Tempo")
+                        ax3.set_yticks([])
+                        ax3.set_title("Antes (cinza) vs Depois (verde) — redução aplicada")
+                        st.pyplot(fig3)
+                    
+                    else:
+                        st.info("Insira um orçamento > 0 para simular crashing (redução de duração mediante custo).")
+
+                else:
+                     if choice == menu[4]:
+
+                     else:
+                        st.header(menu[5])
+                        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Estes aplicativos são referente à aula do dia 13/12/2025.</h6>", unsafe_allow_html=True)
+                        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Para mais informações, dúvidas e sugestões, por favor contacte nos e-mails abaixo:</h6>", unsafe_allow_html=True)
+                        
+                        st.write('''
+                                    victor.lima@ifpe.edu.br
+                                    
+                                    vhugoreslim@gmail.com
+                                    ''' .format(chr(948), chr(948), chr(948), chr(948), chr(948)))       
 if st._is_running_with_streamlit:
     main()
 else:
