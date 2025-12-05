@@ -545,30 +545,19 @@ def main():
                     
                     with st.sidebar.form("add_activity", clear_on_submit=True):
                         st.header("➕ Adicionar Atividade")
-                        a = st.number_input("Tempo otimista (a)", min_value=0.0, value=1.0, step=0.5)
-                        m = st.number_input("Tempo mais provável (m)", min_value=0.0, value=5.0, step=0.5)
-                        b = st.number_input("Tempo pessimista (b)", min_value=0.0, value=9.0, step=0.5)
+                        a = st.number_input("Tempo otimista (a)", min_value=0.0, value=np.round(np.random.uniform(0,10),2), step=0.5)
+                        m = st.number_input("Tempo mais provável (m)", min_value=0.0, value=np.round(np.random.uniform(a,20),2), step=0.5)
+                        b = st.number_input("Tempo pessimista (b)", min_value=0.0, value=np.round(np.random.uniform(m,30),2), step=0.5)
                         cost_normal = st.number_input("Custo normal (R$)", min_value=0.0, value=1000.0, step=100.0)
                         cost_crash = st.number_input("Custo em crashing (R$) - custo total após crash", min_value=0.0, value=2000.0, step=100.0)
-                        crash_duration = st.number_input("Duração mínima possível após crash (tempo)", min_value=0.0, value=2.0, step=0.5)
-                        
-                        # Obter a nova ID que será usada para esta atividade
+                        crash_duration = st.number_input("Duração mínima possível após crash (tempo)", min_value=0.0, value=np.round(np.random.uniform(0,m),2), step=0.5)
                         new_activity_id = next_activity_name()
-                        
-                        # Criar lista de opções incluindo a atividade atual que está sendo adicionada
                         existing = [act["id"] for act in st.session_state.activities]
-                        # Adicionar a nova atividade à lista de opções
                         all_options = existing
-                        
-                        # Usar a lista completa para o multiselect
-                        deps = st.multiselect("Dependências (atividades que devem terminar antes)", 
-                                              options=all_options, 
-                                              default=[])
+                        deps = st.multiselect("Dependências (atividades que devem terminar antes)", options=all_options, default=[])
                         
                         add = st.form_submit_button("Adicionar Atividade")
-                        
                         if add:
-                            # Verificar se a atividade tem dependência de si mesma (evitar loop)
                             if new_activity_id in deps:
                                 st.error("Uma atividade não pode depender de si mesma!")
                             elif not (a <= m <= b):
