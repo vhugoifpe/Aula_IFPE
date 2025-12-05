@@ -704,10 +704,43 @@ def main():
                         # Fluxograma (grafo) - networkx
                         # --------------------------
                         st.subheader("🔀 Fluxograma (Rede de Atividades)")
-                        plt.figure(figsize=(8,5))
-                        pos = nx.spring_layout(G, seed=42)
+
+                        # Determinar camadas baseado na ordem topológica
+                        try:
+                            topological_order = list(nx.topological_sort(G))
+                            # Criar mapeamento de camada baseado no ES (Earliest Start)
+                            layers = {}
+                            for node in G.nodes():
+                                es = cpm["ES"][node] if node in cpm["ES"] else 0
+                                # Arredondar ES para agrupar em camadas
+                                layer = int(es)
+                                if layer not in layers:
+                                    layers[layer] = []
+                                layers[layer].append(node)
+                            
+                            # Ordenar as camadas
+                            sorted_layers = sorted(layers.keys())
+                            
+                            # Criar lista de subsets para multipartite_layout
+                            subsets = [layers[layer] for layer in sorted_layers]
+                            
+                            # Usar multipartite_layout que organiza horizontalmente
+                            pos = nx.multipartite_layout(G, subset_key='subset')
+                            
+                        except:
+                            # Fallback: usar spring_layout com orientação horizontal
+                            pos = nx.spring_layout(G, seed=42)
+                            # Ajustar para organizar baseado no ES
+                            for node in G.nodes():
+                                if node in cpm["ES"]:
+                                    pos[node][0] = cpm["ES"][node]  # X baseado no ES
+                                    pos[node][1] = np.random.uniform(-1, 1)  # Y aleatório
+                        
+                        plt.figure(figsize=(10, 6))
                         node_colors = ["red" if n in cpm["critical_path"] else "skyblue" for n in G.nodes()]
-                        nx.draw(G, pos, with_labels=True, node_color=node_colors, node_size=1200, arrowsize=18, font_weight='bold')
+                        nx.draw(G, pos, with_labels=True, node_color=node_colors, 
+                                node_size=1200, arrowsize=18, font_weight='bold', font_size=10,
+                                edge_color='gray', width=2, alpha=0.8)
                         st.pyplot(plt.gcf())
                         
                         # --------------------------
