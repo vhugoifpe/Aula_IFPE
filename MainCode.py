@@ -550,8 +550,8 @@ def main():
                         cost_normal = st.number_input("Custo normal (R$)", min_value=0.0, value=1000.0, step=100.0)
                         cost_crash = st.number_input("Custo em crashing (R$) - custo total após crash", min_value=0.0, value=2000.0, step=100.0)
                         crash_duration = st.number_input("Duração mínima possível após crash (tempo)", min_value=0.0, value=2.0, step=0.5)
-                        existing = [act["id"] for act in st.session_state.activities]
                         deps = st.multiselect("Dependências (atividades que devem terminar antes)", options=existing)
+                        existing = [act["id"] for act in st.session_state.activities]
                         add = st.form_submit_button("Adicionar Atividade")
                         if add:
                             if not (a <= m <= b):
@@ -582,7 +582,7 @@ def main():
                         st.stop()
                     
                     df_acts = pd.DataFrame(st.session_state.activities)
-                    st.dataframe(df_acts[["id", "a", "m", "b", "te", "var", "cost_normal", "cost_crash", "crash_duration", "deps"]])
+                    st.dataframe(df_acts[["Id", "a", "m", "b", "te", "var", "Custo", "Custo Crash", "Duração Crash", "deps"]])
                     
                     def build_dag(activities, duration_key="te"):
                         G = nx.DiGraph()
