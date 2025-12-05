@@ -664,7 +664,22 @@ def main():
                                 "Crash dur": act["crash_duration"]
                             })
                         df_table = pd.DataFrame(table).sort_values("ES")
-                        st.dataframe(df_table.style.format({"Duração (te)": "{:.2f}", "ES":"{:.2f}", "EF":"{:.2f}", "LS":"{:.2f}", "LF":"{:.2f}", "Folga":"{:.2f}"}), use_container_width=True)
+                        
+                        # CORREÇÃO: Criar o objeto Styler separadamente
+                        styled_df = df_table.style.format({
+                            "Duração (te)": "{:.2f}", 
+                            "ES": "{:.2f}", 
+                            "EF": "{:.2f}", 
+                            "LS": "{:.2f}", 
+                            "LF": "{:.2f}", 
+                            "Folga": "{:.2f}",
+                            "Custo normal": "{:.2f}",
+                            "Custo crash": "{:.2f}",
+                            "Crash dur": "{:.2f}"
+                        })
+                        
+                        # Passar o objeto Styler como primeiro argumento
+                        st.dataframe(styled_df, use_container_width=True)
                         
                         # --------------------------
                         # Gantt chart
