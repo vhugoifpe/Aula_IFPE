@@ -1059,7 +1059,7 @@ def main():
                             st.info("Insira ocorrências para habilitar as ferramentas.")
                             st.stop()
                         
-                        tabs = st.tabs(["Visão Geral","Pareto & Estratificação","CEP & Histograma","Ishikawa & 5 Porquês","FMEA & 5W2H","Folha de Verificação","Exportar / Limpar"])
+                        tabs = st.tabs(["Visão Geral","Pareto & Estratificação","CEP & Histograma","Ishikawa & 5 Porquês","FMEA & 5W2H","Folha de Verificação"])
                         
                         with tabs[0]:
                             st.header("📋 Visão Geral dos Dados")
