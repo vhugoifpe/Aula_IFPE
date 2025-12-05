@@ -915,7 +915,7 @@ def main():
                 else:
                      if choice == menu[4]:
                         
-                         if "occurrences" not in st.session_state:
+                        if "occurrences" not in st.session_state:
                             # occurrences: list of dicts with keys:
                             # date, lote, operador, maquina, defeito, severidade, diametro, LSL, USL, turno
                             st.session_state.occurrences = []
