@@ -535,7 +535,6 @@ def main():
             #####################################################################################################################################################################
             else:
                 if choice == menu[3]:
-                    existing=[]
                     if "activities" not in st.session_state:
                         st.session_state.activities = []
                     
@@ -551,8 +550,8 @@ def main():
                         cost_normal = st.number_input("Custo normal (R$)", min_value=0.0, value=1000.0, step=100.0)
                         cost_crash = st.number_input("Custo em crashing (R$) - custo total após crash", min_value=0.0, value=2000.0, step=100.0)
                         crash_duration = st.number_input("Duração mínima possível após crash (tempo)", min_value=0.0, value=2.0, step=0.5)
-                        deps = st.multiselect("Dependências (atividades que devem terminar antes)", options=existing)
                         existing = [act["id"] for act in st.session_state.activities]
+                        deps = st.multiselect("Dependências (atividades que devem terminar antes)", options=existing)
                         add = st.form_submit_button("Adicionar Atividade")
                         if add:
                             if not (a <= m <= b):
