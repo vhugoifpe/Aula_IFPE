@@ -643,7 +643,7 @@ def main():
                         # --------------------------
                         table = []
                         for act in st.session_state.activities:
-                            idn = act["Id"]
+                            idn = act["id"]
                             table.append({
                                 "Atividade": idn,
                                 "Duração (te)": G.nodes[idn]["duration"],
@@ -652,9 +652,9 @@ def main():
                                 "LS": cpm["LS"][idn],
                                 "LF": cpm["LF"][idn],
                                 "Folga": cpm["slack"][idn],
-                                "Custo Normal": act["Custo Normal"],
-                                "Custo Crash": act["Custo Crash"],
-                                "Crash Dur": act["Duração Crash"]
+                                "cost_normal": act["cost_normal"],
+                                "cost_crash": act["cost_crash"],
+                                "crash_duration": act["crash_duration"]
                             })
                         df_table = pd.DataFrame(table).sort_values("ES")
                         
@@ -665,9 +665,9 @@ def main():
                         df_table["LS"] = df_table["LS"].round(2)
                         df_table["LF"] = df_table["LF"].round(2)
                         df_table["Folga"] = df_table["Folga"].round(2)
-                        df_table["Custo Normal"] = df_table["Custo Normal"].round(2)
-                        df_table["Custo Crash"] = df_table["Custo Crash"].round(2)
-                        df_table["Crash Dur"] = df_table["Crash Dur"].round(2)
+                        df_table["cost_normal"] = df_table["cost_normal"].round(2)
+                        df_table["cost_crash"] = df_table["cost_crash"].round(2)
+                        df_table["crash_duration"] = df_table["crash_duration"].round(2)
                         
                         st.dataframe(df_table)
                         
