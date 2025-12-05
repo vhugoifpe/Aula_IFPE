@@ -571,16 +571,16 @@ def main():
                             te = (a + 4*m + b) / 6.0
                             var = ((b - a) / 6.0) ** 2
                             act = {
-                                "id": new_activity_id,
+                                "Id": new_activity_id,
                                 "a": float(a),
                                 "m": float(m),
                                 "b": float(b),
                                 "te": float(te),
                                 "var": float(var),
-                                "cost_normal": float(cost_normal),
-                                "cost_crash": float(cost_crash),
-                                "crash_duration": float(crash_duration),
-                                "deps": list(deps)}
+                                "Custo Normal": float(cost_normal),
+                                "Custo Crash": float(cost_crash),
+                                "Duração Crash": float(crash_duration),
+                                "Deps": list(deps)}
                             st.session_state.activities.append(act)
                             st.sidebar.success(f"Atividade {act['id']} adicionada.")
                             st.experimental_rerun()
@@ -591,7 +591,7 @@ def main():
                         st.stop()
                     
                     df_acts = pd.DataFrame(st.session_state.activities)
-                    st.dataframe(df_acts[["id", "a", "m", "b", "te", "var", "cost_normal", "cost_crash", "crash_duration", "deps"]])
+                    st.dataframe(df_acts[["Id", "a", "m", "b", "te", "Var", "Custo Normal", "Custo Crash", "Duração Crash", "Deps"]])
                     
                     def build_dag(activities, duration_key="te"):
                         G = nx.DiGraph()
@@ -661,9 +661,9 @@ def main():
                                 "LS": cpm["LS"][idn],
                                 "LF": cpm["LF"][idn],
                                 "Folga": cpm["slack"][idn],
-                                "Custo normal": act["cost_normal"],
-                                "Custo crash": act["cost_crash"],
-                                "Crash dur": act["crash_duration"]
+                                "Custo Normal": act["cost_normal"],
+                                "Custo Crash": act["cost_crash"],
+                                "Crash Dur": act["crash_duration"]
                             })
                         df_table = pd.DataFrame(table).sort_values("ES")
                         
@@ -674,9 +674,9 @@ def main():
                         df_table["LS"] = df_table["LS"].round(2)
                         df_table["LF"] = df_table["LF"].round(2)
                         df_table["Folga"] = df_table["Folga"].round(2)
-                        df_table["Custo normal"] = df_table["Custo normal"].round(2)
-                        df_table["Custo crash"] = df_table["Custo crash"].round(2)
-                        df_table["Crash dur"] = df_table["Crash dur"].round(2)
+                        df_table["Custo Normal"] = df_table["Custo Normal"].round(2)
+                        df_table["Custo Crash"] = df_table["Custo Crash"].round(2)
+                        df_table["Crash Dur"] = df_table["Crash Dur"].round(2)
                         
                         st.dataframe(df_table)
                         
