@@ -6,7 +6,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 import pandas as pd
-from math import sqrt
+from math import sqrt, erf
 from io import StringIO
 import networkx as nx
 
