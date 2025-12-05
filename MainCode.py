@@ -911,10 +911,6 @@ def main():
                         
                         else:
                             st.info("Insira um orçamento > 0 para simular crashing (redução de duração mediante custo).")
-                    
-                    # NO FINAL DO ARQUIVO (fora de qualquer if ou função):
-                    if should_rerun:
-                        st.rerun()
 
                 else:
                      if choice == menu[4]:
