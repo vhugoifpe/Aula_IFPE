@@ -703,44 +703,63 @@ def main():
                         # --------------------------
                         # Fluxograma (grafo) - networkx
                         # --------------------------
-                        st.subheader("🔀 Fluxograma (Rede de Atividades)")
+                        st.subheader("🔀 Fluxograma (Rede de Atividades) - Layout de Camadas")
 
-                        # Determinar camadas baseado na ordem topológica
-                        try:
-                            topological_order = list(nx.topological_sort(G))
-                            # Criar mapeamento de camada baseado no ES (Earliest Start)
+                        # Calcular camadas baseado em dependências
+                        def calculate_layers(G):
                             layers = {}
+                            # Inicializar com nós sem predecessores (início)
                             for node in G.nodes():
-                                es = cpm["ES"][node] if node in cpm["ES"] else 0
-                                # Arredondar ES para agrupar em camadas
-                                layer = int(es)
-                                if layer not in layers:
-                                    layers[layer] = []
-                                layers[layer].append(node)
+                                if G.in_degree(node) == 0:
+                                    layers[node] = 0
                             
-                            # Ordenar as camadas
-                            sorted_layers = sorted(layers.keys())
+                            # Propagar camadas
+                            changed = True
+                            while changed:
+                                changed = False
+                                for node in G.nodes():
+                                    if node not in layers:
+                                        preds = list(G.predecessors(node))
+                                        if preds:
+                                            # Camada é 1 + max(camada dos predecessores)
+                                            pred_layers = [layers[p] for p in preds if p in layers]
+                                            if pred_layers:
+                                                layers[node] = max(pred_layers) + 1
+                                                changed = True
                             
-                            # Criar lista de subsets para multipartite_layout
-                            subsets = [layers[layer] for layer in sorted_layers]
-                            
-                            # Usar multipartite_layout que organiza horizontalmente
-                            pos = nx.multipartite_layout(G, subset_key='subset')
-                            
-                        except:
-                            # Fallback: usar spring_layout com orientação horizontal
-                            pos = nx.spring_layout(G, seed=42)
-                            # Ajustar para organizar baseado no ES
+                            # Garantir que todos os nós tenham camada
                             for node in G.nodes():
-                                if node in cpm["ES"]:
-                                    pos[node][0] = cpm["ES"][node]  # X baseado no ES
-                                    pos[node][1] = np.random.uniform(-1, 1)  # Y aleatório
+                                if node not in layers:
+                                    layers[node] = 0
+                            
+                            return layers
                         
-                        plt.figure(figsize=(10, 6))
+                        layers = calculate_layers(G)
+                        
+                        # Criar posições baseadas em camadas
+                        pos = {}
+                        for node, layer in layers.items():
+                            # Nós na mesma camada
+                            nodes_in_layer = [n for n, l in layers.items() if l == layer]
+                            idx = nodes_in_layer.index(node)
+                            
+                            x = layer * 2  # Espaçamento horizontal entre camadas
+                            y = -idx * 1.5  # Espaçamento vertical dentro da camada
+                            
+                            pos[node] = [x, y]
+                        
+                        plt.figure(figsize=(12, 8))
                         node_colors = ["red" if n in cpm["critical_path"] else "skyblue" for n in G.nodes()]
-                        nx.draw(G, pos, with_labels=True, node_color=node_colors, 
-                                node_size=1200, arrowsize=18, font_weight='bold', font_size=10,
-                                edge_color='gray', width=2, alpha=0.8)
+                        
+                        # Desenhar
+                        nx.draw(G, pos, with_labels=True, node_color=node_colors,
+                                node_size=1200, arrowsize=20, font_weight='bold',
+                                edge_color='gray', width=2, alpha=0.7)
+                        
+                        # Adicionar linhas de grade para camadas (opcional)
+                        for layer in set(layers.values()):
+                            plt.axvline(x=layer*2, color='lightgray', linestyle='--', alpha=0.3)
+                        
                         st.pyplot(plt.gcf())
                         
                         # --------------------------
