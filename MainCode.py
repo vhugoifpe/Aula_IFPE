@@ -553,7 +553,7 @@ def main():
                         crash_duration = st.number_input("Duração mínima possível após crash (tempo)", min_value=0.0, value=np.round(np.random.uniform(a, m), 1), step=0.5)
                         
                         new_activity_id = next_activity_name()
-                        existing = [act["id"] for act in st.session_state.activities]
+                        existing = [act["Id"] for act in st.session_state.activities]  # MUDADO: "Id" em vez de "id"
                         all_options = existing
                         deps = st.multiselect("Dependências (atividades que devem terminar antes)", 
                                               options=all_options, 
@@ -571,19 +571,20 @@ def main():
                             te = (a + 4*m + b) / 6.0
                             var = ((b - a) / 6.0) ** 2
                             act = {
-                                "Id": new_activity_id,
+                                "Id": new_activity_id,  # MUDADO: "Id" com maiúscula
                                 "a": float(a),
                                 "m": float(m),
                                 "b": float(b),
                                 "te": float(te),
-                                "var": float(var),
-                                "Custo Normal": float(cost_normal),
-                                "Custo Crash": float(cost_crash),
-                                "Duração Crash": float(crash_duration),
-                                "Deps": list(deps)}
+                                "Var": float(var),  # MUDADO: "Var" com maiúscula
+                                "Custo Normal": float(cost_normal),  # MUDADO: "Custo Normal" com espaço
+                                "Custo Crash": float(cost_crash),    # MUDADO: "Custo Crash" com espaço
+                                "Duração Crash": float(crash_duration),  # MUDADO: "Duração Crash" com espaço
+                                "Deps": list(deps)  # MUDADO: "Deps" com maiúscula
+                            }
                             st.session_state.activities.append(act)
-                            st.sidebar.success(f"Atividade {act['id']} adicionada.")
-                            st.experimental_rerun()
+                            st.sidebar.success(f"Atividade {act['Id']} adicionada.")  # MUDADO: acessar "Id" em vez de "id"
+                            st.rerun()
                     
                     st.header("📋 Atividades cadastradas")
                     if len(st.session_state.activities) == 0:
@@ -596,10 +597,10 @@ def main():
                     def build_dag(activities, duration_key="te"):
                         G = nx.DiGraph()
                         for act in activities:
-                            G.add_node(act["id"], duration=act[duration_key], var=act["var"])
+                            G.add_node(act["Id"], duration=act[duration_key], var=act["Var"])  # MUDADO: "Id" e "Var"
                         for act in activities:
-                            for p in act["deps"]:
-                                G.add_edge(p, act["id"])
+                            for p in act["Deps"]:  # MUDADO: "Deps" com maiúscula
+                                G.add_edge(p, act["Id"])  # MUDADO: "Id" com maiúscula
                         return G
                     
                     def compute_cpm(G):
@@ -631,9 +632,9 @@ def main():
                             "critical_path": critical_path,
                             "var_critical": var_sum
                         }
-
+                    
                     budget = st.number_input("Orçamento disponível para crashing (R$)", min_value=0.0, value=0.0, step=100.0)
-
+                    
                     if st.button("Gerar resultados"):   
                         G = build_dag(st.session_state.activities, duration_key="te")
                         try:
@@ -652,7 +653,7 @@ def main():
                         # --------------------------
                         table = []
                         for act in st.session_state.activities:
-                            idn = act["id"]
+                            idn = act["Id"]  # MUDADO: "Id" com maiúscula
                             table.append({
                                 "Atividade": idn,
                                 "Duração (te)": G.nodes[idn]["duration"],
@@ -661,9 +662,9 @@ def main():
                                 "LS": cpm["LS"][idn],
                                 "LF": cpm["LF"][idn],
                                 "Folga": cpm["slack"][idn],
-                                "Custo Normal": act["cost_normal"],
-                                "Custo Crash": act["cost_crash"],
-                                "Crash Dur": act["crash_duration"]
+                                "Custo Normal": act["Custo Normal"],  # MUDADO: "Custo Normal"
+                                "Custo Crash": act["Custo Crash"],    # MUDADO: "Custo Crash"
+                                "Crash Dur": act["Duração Crash"]     # MUDADO: "Duração Crash"
                             })
                         df_table = pd.DataFrame(table).sort_values("ES")
                         
@@ -706,7 +707,7 @@ def main():
                         # Fluxograma (grafo) - networkx
                         # --------------------------
                         st.subheader("🔀 Fluxograma (Rede de Atividades) - Layout de Camadas")
-
+                    
                         # Calcular camadas baseado em dependências
                         def calculate_layers(G):
                             layers = {}
@@ -770,16 +771,16 @@ def main():
                         st.subheader("📉 Avaliação Probabilística (PERT)")
                         deadline = st.number_input("Prazo desejado (unidades de tempo) — comparar com duração esperada", min_value=0.0, value=float(cpm["duration"]))
                         mu = cpm["duration"]
-                        sigma = sqrt(cpm["var_critical"]) if cpm["var_critical"]>0 else 1e-6
+                        sigma = math.sqrt(cpm["var_critical"]) if cpm["var_critical"]>0 else 1e-6
                         z = (deadline - mu) / sigma
                         # normal CDF via erf
-                        prob = 0.5 * (1 + erf(z / sqrt(2)))
+                        prob = 0.5 * (1 + math.erf(z / math.sqrt(2)))
                         st.write(f"Média (µ) = {mu:.2f}  •  Desvio padrão (σ) = {sigma:.3f}")
                         st.write(f"Probabilidade aproximada de terminar até {deadline:.2f} = **{prob*100:.2f}%**")
                         
                         # plot normal curve with marker
                         x = np.linspace(mu - 4*sigma, mu + 4*sigma, 200)
-                        pdf = (1/ (sigma * sqrt(2*np.pi))) * np.exp(-0.5*((x-mu)/sigma)**2)
+                        pdf = (1/ (sigma * math.sqrt(2*math.pi))) * np.exp(-0.5*((x-mu)/sigma)**2)
                         fig2, ax2 = plt.subplots(figsize=(8,3))
                         ax2.plot(x, pdf, label="Distribuição Normal aproximada do tempo do projeto")
                         ax2.axvline(deadline, color='red', linestyle='--', label=f"Deadline ({deadline})")
@@ -794,15 +795,15 @@ def main():
                         st.subheader("💸 Crashing — Alocar budget para reduzir duração do projeto")
                         
                         if budget > 0:
-                            # We'll perform greedy allocation on current critical path
-                            # For each act on critical path compute: normal_dur, crash_dur, max_reduction, cost_increase, slope = cost_increase / max_reduction
-                            # Note: treat crash cost as total cost after crashing; cost increase = cost_crash - cost_normal
-                            acts_map = {act["id"]: act for act in st.session_state.activities}
+                            # Criar um mapa das atividades por ID
+                            acts_map = {act["Id"]: act for act in st.session_state.activities}  # MUDADO: "Id"
+                            
                             # prepare mutable durations copy
-                            durations = {act["id"]: act["te"] for act in st.session_state.activities}
+                            durations = {act["Id"]: act["te"] for act in st.session_state.activities}  # MUDADO: "Id"
                             remaining_budget = float(budget)
-                            spend = {act["id"]: 0.0 for act in st.session_state.activities}
-                            reduction = {act["id"]: 0.0 for act in st.session_state.activities}
+                            spend = {act["Id"]: 0.0 for act in st.session_state.activities}  # MUDADO: "Id"
+                            reduction = {act["Id"]: 0.0 for act in st.session_state.activities}  # MUDADO: "Id"
+                            
                             # loop until budget exhausted or no reducible on critical path
                             iter_count = 0
                             while remaining_budget > 0 and iter_count < 500:
@@ -811,51 +812,61 @@ def main():
                                     G.nodes[n]["duration"] = durations[n]
                                 cpm_now = compute_cpm(G)
                                 crit = cpm_now["critical_path"]
+                                
                                 # candidate activities on critical path with possible reduction left
                                 candidates = []
                                 for aid in crit:
                                     act = acts_map[aid]
                                     curr = durations[aid]
-                                    min_possible = act["crash_duration"]
+                                    min_possible = act["Duração Crash"]  # MUDADO: "Duração Crash"
                                     max_reduc = max(0.0, curr - min_possible)
-                                    cost_increase = max(0.0, act["cost_crash"] - act["cost_normal"])
+                                    cost_increase = max(0.0, act["Custo Crash"] - act["Custo Normal"])  # MUDADO: "Custo Crash" e "Custo Normal"
                                     # if no reducible, skip
                                     if max_reduc <= 1e-9 or cost_increase <= 0:
                                         continue
                                     slope = cost_increase / max_reduc  # cost per unit time reduced
                                     candidates.append((slope, aid, max_reduc, cost_increase, curr, min_possible))
+                                
                                 if not candidates:
                                     break
+                                
                                 # pick lowest slope
                                 candidates.sort(key=lambda x: x[0])
                                 slope, aid, max_reduc, cost_increase, curr, min_possible = candidates[0]
+                                
                                 # How much can we reduce given remaining budget?
-                                # cost per unit = slope; allocate either full reduction or budget-limited
                                 max_affordable_reduction = remaining_budget / slope if slope>0 else max_reduc
                                 reduce_by = min(max_reduc, max_affordable_reduction)
+                                
                                 if reduce_by <= 1e-9:
                                     break
+                                
                                 # compute proportional cost based on reduction fraction
                                 cost_for_this = slope * reduce_by
+                                
                                 # apply
                                 durations[aid] = durations[aid] - reduce_by
                                 remaining_budget -= cost_for_this
                                 spend[aid] += cost_for_this
                                 reduction[aid] += reduce_by
                                 iter_count += 1
+                            
                             # after allocation compute final cpm
                             for n in G.nodes():
                                 G.nodes[n]["duration"] = durations[n]
                             cpm_after = compute_cpm(G)
                             new_duration = cpm_after["duration"]
                             total_spent = budget - remaining_budget
+                            
                             st.write(f"Orçamento inicial: R$ {budget:.2f} • Gasto total: R$ {total_spent:.2f} • Orçamento restante: R$ {remaining_budget:.2f}")
                             st.write(f"⏱️ Duração antes: {mu:.2f} → Duração após crashing: {new_duration:.2f} (redução {mu - new_duration:.2f})")
+                            
                             # show allocation table
                             alloc = []
                             for aid in spend:
                                 if spend[aid] > 0:
                                     alloc.append({"Atividade": aid, "Gasto (R$)": spend[aid], "Redução tempo": reduction[aid], "Nova duração": durations[aid]})
+                            
                             if alloc:
                                 st.subheader("🧾 Alocação do orçamento (atividades otimizadas)")
                                 st.table(pd.DataFrame(alloc).round(3))
@@ -867,18 +878,22 @@ def main():
                             df_before = df_table.copy()
                             df_before = df_before.set_index("Atividade")
                             df_after = df_before.copy()
-                            for i,row in df_after.iterrows():
-                                df_after.at[i,"Duração (te)"] = durations[i]
+                            
+                            for i, row in df_after.iterrows():
+                                df_after.at[i, "Duração (te)"] = durations[i]
+                            
                             # plot comparative bars
                             fig3, ax3 = plt.subplots(figsize=(10, max(4, len(df_after)*0.6)))
                             y_pos = np.arange(len(df_before))
-                            for idx,i in enumerate(df_before.index):
-                                start_before = df_before.loc[i,"ES"]
-                                dur_before = df_before.loc[i,"Duração (te)"]
-                                dur_after = df_after.loc[i,"Duração (te)"]
+                            
+                            for idx, i in enumerate(df_before.index):
+                                start_before = df_before.loc[i, "ES"]
+                                dur_before = df_before.loc[i, "Duração (te)"]
+                                dur_after = df_after.loc[i, "Duração (te)"]
                                 ax3.barh(i, dur_before, left=start_before, height=0.35, color='lightgray', edgecolor='black')
                                 ax3.barh(i, dur_after, left=start_before, height=0.2, color='tab:green', edgecolor='black')
                                 ax3.text(start_before + dur_after + 0.02, i, f"-{dur_before-dur_after:.2f}", va='center')
+                            
                             ax3.invert_yaxis()
                             ax3.set_xlabel("Tempo")
                             ax3.set_yticks([])
