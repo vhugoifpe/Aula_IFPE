@@ -676,7 +676,7 @@ def main():
                         df_table["Custo crash"] = df_table["Custo crash"].round(2)
                         df_table["Crash dur"] = df_table["Crash dur"].round(2)
                         
-                        st.dataframe(df_table, use_container_width=True)
+                        st.dataframe(df_table)
                         
                         # --------------------------
                         # Gantt chart
