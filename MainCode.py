@@ -556,33 +556,52 @@ def main():
                         all_options = existing
                         deps = st.multiselect("Dependências", options=all_options, default=[])
                         add = st.form_submit_button("Adicionar Atividade")
+                        
                         if add:
-                            if (m>b or m<a):
+                            # Corrigido: verificação completa a ≤ m ≤ b
+                            if not (a <= m <= b):
                                 st.error("Valide: precisa ser a ≤ m ≤ b")
-                                if crash_duration > m:
-                                    st.error("Duração mínima após crash não pode ser maior que m (duração típica).")
-                                else:
-                                    te = (a + 4*m + b) / 6.0
-                                    var = ((b - a) / 6.0) ** 2
-                                    act = {
-                                        "id": new_activity_id,
-                                        "a": float(a),
-                                        "m": float(m),
-                                        "b": float(b),
-                                        "te": float(te),
-                                        "var": float(var),
-                                        "cost_normal": float(cost_normal),
-                                        "cost_crash": float(cost_crash),
-                                        "crash_duration": float(crash_duration),
-                                        "deps": list(deps)
-                                    }
-                                    st.session_state.activities.append(act)
-                                    st.success(f"Atividade {act['id']} adicionada.")
-                                    st.experimental_rerun()
+                            elif crash_duration > m:
+                                st.error("Duração mínima após crash não pode ser maior que m (duração típica).")
+                            else:
+                                te = (a + 4*m + b) / 6.0
+                                var = ((b - a) / 6.0) ** 2
+                                act = {
+                                    "id": new_activity_id,
+                                    "a": float(a),
+                                    "m": float(m),
+                                    "b": float(b),
+                                    "te": float(te),
+                                    "var": float(var),
+                                    "cost_normal": float(cost_normal),
+                                    "cost_crash": float(cost_crash),
+                                    "crash_duration": float(crash_duration),
+                                    "deps": list(deps)
+                                }
+                                st.session_state.activities.append(act)
+                                st.success(f"Atividade {act['id']} adicionada.")
+                                st.rerun()
                     
                     st.header("📋 Atividades cadastradas")
-                    df_acts = pd.DataFrame(st.session_state.activities)
-                    st.dataframe(df_acts[["id", "a", "m", "b", "te", "var", "cost_normal", "cost_crash", "crash_duration", "deps"]])
+                    
+                    # Verificar se há atividades antes de mostrar o dataframe
+                    if len(st.session_state.activities) == 0:
+                        st.info("Nenhuma atividade cadastrada. Adicione atividades pelo painel lateral.")
+                    else:
+                        df_acts = pd.DataFrame(st.session_state.activities)
+                        
+                        # Verificar se todas as colunas existem antes de acessá-las
+                        required_columns = ["id", "a", "m", "b", "te", "var", "cost_normal", "cost_crash", "crash_duration", "deps"]
+                        available_columns = df_acts.columns.tolist()
+                        
+                        # Filtrar apenas as colunas que existem
+                        columns_to_show = [col for col in required_columns if col in available_columns]
+                        
+                        # Mostrar o dataframe com as colunas disponíveis
+                        if columns_to_show:
+                            st.dataframe(df_acts[columns_to_show])
+                        else:
+                            st.warning("Nenhuma coluna disponível para mostrar.")
                     
                     def build_dag(activities, duration_key="te"):
                         G = nx.DiGraph()
