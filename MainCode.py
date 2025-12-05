@@ -8,6 +8,7 @@ from sklearn.linear_model import LinearRegression
 import pandas as pd
 from math import sqrt
 from io import StringIO
+import networkx as nx
 
 def main():
     #criando 3 colunas
