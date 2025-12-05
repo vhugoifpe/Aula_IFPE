@@ -549,47 +549,40 @@ def main():
                         m = st.number_input("Tempo mais provável (m)", min_value=0.0, value=np.round(np.random.uniform(a,20),2), step=0.5)
                         b = st.number_input("Tempo pessimista (b)", min_value=0.0, value=np.round(np.random.uniform(m,30),2), step=0.5)
                         cost_normal = st.number_input("Custo normal (R$)", min_value=0.0, value=1000.0, step=100.0)
-                        cost_crash = st.number_input("Custo em crashing (R$) - custo total após crash", min_value=0.0, value=2000.0, step=100.0)
+                        cost_crash = st.number_input("Custo em crashing (R$)", min_value=0.0, value=2000.0, step=100.0)
                         crash_duration = st.number_input("Duração mínima possível após crash (tempo)", min_value=0.0, value=np.round(np.random.uniform(0,m),2), step=0.5)
                         new_activity_id = next_activity_name()
                         existing = [act["id"] for act in st.session_state.activities]
                         all_options = existing
-                        deps = st.multiselect("Dependências (atividades que devem terminar antes)", options=all_options, default=[])
-                        
+                        deps = st.multiselect("Dependências", options=all_options, default=[])
                         add = st.form_submit_button("Adicionar Atividade")
                         if add:
-                            if new_activity_id in deps:
-                                st.error("Uma atividade não pode depender de si mesma!")
-                            elif not (a <= m <= b):
+                            if (m>b or m<a):
                                 st.error("Valide: precisa ser a ≤ m ≤ b")
-                            elif crash_duration > m:
-                                st.error("Duração mínima após crash não pode ser maior que m (duração típica).")
-                            else:
-                                te = (a + 4*m + b) / 6.0
-                                var = ((b - a) / 6.0) ** 2
-                                act = {
-                                    "id": new_activity_id,
-                                    "a": float(a),
-                                    "m": float(m),
-                                    "b": float(b),
-                                    "te": float(te),
-                                    "var": float(var),
-                                    "cost_normal": float(cost_normal),
-                                    "cost_crash": float(cost_crash),
-                                    "crash_duration": float(crash_duration),
-                                    "deps": list(deps)
-                                }
-                                st.session_state.activities.append(act)
-                                st.success(f"Atividade {act['id']} adicionada.")
-                                st.experimental_rerun()
+                                if crash_duration > m:
+                                    st.error("Duração mínima após crash não pode ser maior que m (duração típica).")
+                                else:
+                                    te = (a + 4*m + b) / 6.0
+                                    var = ((b - a) / 6.0) ** 2
+                                    act = {
+                                        "id": new_activity_id,
+                                        "a": float(a),
+                                        "m": float(m),
+                                        "b": float(b),
+                                        "te": float(te),
+                                        "var": float(var),
+                                        "cost_normal": float(cost_normal),
+                                        "cost_crash": float(cost_crash),
+                                        "crash_duration": float(crash_duration),
+                                        "deps": list(deps)
+                                    }
+                                    st.session_state.activities.append(act)
+                                    st.success(f"Atividade {act['id']} adicionada.")
+                                    st.experimental_rerun()
                     
                     st.header("📋 Atividades cadastradas")
-                    if len(st.session_state.activities) == 0:
-                        st.info("Nenhuma atividade cadastrada. Adicione atividades pelo painel lateral.")
-                        st.stop()
-                    
                     df_acts = pd.DataFrame(st.session_state.activities)
-                    st.dataframe(df_acts[["Id", "a", "m", "b", "te", "Var", "Custo Normal", "Custo Crash", "Duração Crash", "Deps"]])
+                    st.dataframe(df_acts[["id", "a", "m", "b", "te", "var", "cost_normal", "cost_crash", "crash_duration", "deps"]])
                     
                     def build_dag(activities, duration_key="te"):
                         G = nx.DiGraph()
