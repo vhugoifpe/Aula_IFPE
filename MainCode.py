@@ -927,25 +927,25 @@ def main():
                             return media, UCL, LCL
                         
                         # ============================
-                        # Layout principal
+                        # MENU LATERAL
                         # ============================
                         
                         st.title("📊 Ferramentas da Qualidade — App Interativo")
-                        st.write("Este aplicativo contém:")
-                        st.write("- **Pareto e Estratificação**")
-                        st.write("- **Gráficos de Controle (CEP)**")
-                        st.write("- **Histograma**")
                         
-                        tabs = st.tabs(["Pareto & Estratificação", "CEP", "Histograma"])
+                        menu = st.sidebar.radio(
+                            "Selecione a ferramenta:",
+                            ["Pareto & Estratificação", "CEP (Controle Estatístico)", "Histograma"]
+                        )
                         
                         # ============================
-                        # 1) PARETO E ESTRATIFICAÇÃO
+                        # 1) PARETO & ESTRATIFICAÇÃO
                         # ============================
-                        with tabs[0]:
+                        
+                        if menu == "Pareto & Estratificação":
                         
                             st.header("📌 Pareto e Estratificação")
                         
-                            st.write("Insira os dados como uma tabela contendo *Problema* e *Quantidade*.")
+                            st.write("Insira os dados contendo **Problema** e **Quantidade**.")
                         
                             df_pareto = st.data_editor(
                                 pd.DataFrame({"Problema":[],"Quantidade":[]}),
@@ -968,20 +968,21 @@ def main():
                         
                                 st.pyplot(fig)
                         
-                                st.subheader("Dados Estratificados:")
+                                st.subheader("Dados Estratificados")
                                 st.dataframe(pd.DataFrame({"Frequência": dados, "% Acumulado": cumul}))
                         
                             else:
                                 st.info("Adicione dados na tabela para gerar o Pareto.")
                         
                         # ============================
-                        # 2) CEP (Controle Estatístico do Processo)
+                        # 2) CEP (GRÁFICO DE CONTROLE)
                         # ============================
-                        with tabs[1]:
+                        
+                        elif menu == "CEP (Controle Estatístico)":
                         
                             st.header("📌 CEP — Gráfico de Controle")
                         
-                            st.write("Insira medições individuais para o processo monitorado.")
+                            st.write("Insira medições individuais do processo.")
                         
                             df_cep = st.data_editor(
                                 pd.DataFrame({"Valor":[]}),
@@ -1011,16 +1012,17 @@ def main():
                                 st.write(f"**LCL:** {LCL:.2f}")
                         
                             else:
-                                st.info("Adicione pelo menos 3 valores para gerar o gráfico de controle.")
+                                st.info("Adicione pelo menos 3 valores.")
                         
                         # ============================
                         # 3) HISTOGRAMA
                         # ============================
-                        with tabs[2]:
+                        
+                        elif menu == "Histograma":
                         
                             st.header("📌 Histograma")
                         
-                            st.write("Insira os dados individuais para gerar o histograma.")
+                            st.write("Insira valores numéricos para construir o histograma.")
                         
                             df_hist = st.data_editor(
                                 pd.DataFrame({"Valor":[]}),
@@ -1039,12 +1041,11 @@ def main():
                         
                                 st.pyplot(fig)
                         
-                                st.subheader("Estatísticas")
+                                st.subheader("Estatísticas descritivas")
                                 st.write(series.describe())
                         
                             else:
                                 st.info("Adicione valores para gerar o histograma.")
-
                         
                      else:
                         st.header(menu[5])
