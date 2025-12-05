@@ -580,7 +580,7 @@ def main():
                                 }
                                 st.session_state.activities.append(act)
                                 st.success(f"Atividade {act['id']} adicionada.")
-                                st.rerun()
+                                st.experimental_rerun()
                     
                     st.header("📋 Atividades cadastradas")
                     
