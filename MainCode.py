@@ -550,11 +550,27 @@ def main():
                         cost_normal = st.number_input("Custo normal (R$)", min_value=0.0, value=1000.0, step=100.0)
                         cost_crash = st.number_input("Custo em crashing (R$) - custo total após crash", min_value=0.0, value=2000.0, step=100.0)
                         crash_duration = st.number_input("Duração mínima possível após crash (tempo)", min_value=0.0, value=2.0, step=0.5)
+                        
+                        # Obter a nova ID que será usada para esta atividade
+                        new_activity_id = next_activity_name()
+                        
+                        # Criar lista de opções incluindo a atividade atual que está sendo adicionada
                         existing = [act["id"] for act in st.session_state.activities]
-                        deps = st.multiselect("Dependências (atividades que devem terminar antes)", options=existing)
+                        # Adicionar a nova atividade à lista de opções
+                        all_options = existing + [new_activity_id]
+                        
+                        # Usar a lista completa para o multiselect
+                        deps = st.multiselect("Dependências (atividades que devem terminar antes)", 
+                                              options=all_options, 
+                                              default=[])
+                        
                         add = st.form_submit_button("Adicionar Atividade")
+                        
                         if add:
-                            if not (a <= m <= b):
+                            # Verificar se a atividade tem dependência de si mesma (evitar loop)
+                            if new_activity_id in deps:
+                                st.error("Uma atividade não pode depender de si mesma!")
+                            elif not (a <= m <= b):
                                 st.error("Valide: precisa ser a ≤ m ≤ b")
                             elif crash_duration > m:
                                 st.error("Duração mínima após crash não pode ser maior que m (duração típica).")
@@ -562,7 +578,7 @@ def main():
                                 te = (a + 4*m + b) / 6.0
                                 var = ((b - a) / 6.0) ** 2
                                 act = {
-                                    "id": next_activity_name(),
+                                    "id": new_activity_id,
                                     "a": float(a),
                                     "m": float(m),
                                     "b": float(b),
@@ -575,6 +591,7 @@ def main():
                                 }
                                 st.session_state.activities.append(act)
                                 st.success(f"Atividade {act['id']} adicionada.")
+                                st.rerun()  # Isso recarrega a página para atualizar o sidebar
                     
                     st.header("📋 Atividades cadastradas")
                     if len(st.session_state.activities) == 0:
