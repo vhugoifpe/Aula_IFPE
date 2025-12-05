@@ -914,7 +914,8 @@ def main():
 
                 else:
                      if choice == menu[4]:
-                        if "occurrences" not in st.session_state:
+                        
+                         if "occurrences" not in st.session_state:
                             # occurrences: list of dicts with keys:
                             # date, lote, operador, maquina, defeito, severidade, diametro, LSL, USL, turno
                             st.session_state.occurrences = []
@@ -925,6 +926,9 @@ def main():
                         if "fmea" not in st.session_state:
                             st.session_state.fmea = []  # list of dicts {defeito, S, O, D, RPN, action}
                         
+                        # ------------------------------
+                        # Helper functions
+                        # ------------------------------
                         def add_occurrence(rec):
                             st.session_state.occurrences.append(rec)
                         
@@ -932,6 +936,22 @@ def main():
                             if len(st.session_state.occurrences) == 0:
                                 return pd.DataFrame(columns=["date","lote","operador","maquina","defeito","severidade","diametro","LSL","USL","turno"])
                             return pd.DataFrame(st.session_state.occurrences)
+                        
+                        def parse_uploaded_csv(uploaded):
+                            try:
+                                df = pd.read_csv(uploaded)
+                                # expect at least 'date' and 'defeito' or 'sales' etc.
+                                # normalize columns
+                                expected = ["date","lote","operador","maquina","defeito","severidade","diametro","LSL","USL","turno"]
+                                for col in expected:
+                                    if col not in df.columns:
+                                        df[col] = np.nan
+                                # convert types
+                                df["date"] = pd.to_datetime(df["date"], errors="coerce")
+                                return df[expected]
+                            except Exception as e:
+                                st.error(f"Erro ao ler CSV: {e}")
+                                return None
                         
                         def plot_pareto(df, defect_col="defeito"):
                             freq = df[defect_col].fillna("Sem Info").value_counts()
@@ -966,10 +986,13 @@ def main():
                                 return fig, None, None, None, None
                         
                         def xmR_chart(series, title="XmR Chart"):
+                            # series: pandas Series of readings (float)
                             x = series.astype(float).reset_index(drop=True)
+                            # Moving Range
                             mr = x.diff().abs().dropna()
                             Xbar = x.mean()
                             MRbar = mr.mean()
+                            # Control limits (common approximations)
                             UCL_x = Xbar + 2.66 * MRbar
                             LCL_x = Xbar - 2.66 * MRbar
                             UCL_mr = 3.267 * MRbar
@@ -989,8 +1012,11 @@ def main():
                             plt.tight_layout()
                             return fig, {"Xbar":Xbar, "MRbar":MRbar, "UCL_x":UCL_x, "LCL_x":LCL_x, "UCL_mr":UCL_mr}
                         
+                        # ------------------------------
+                        # Layout: input area (left) + tools (right)
+                        # ------------------------------
                         st.sidebar.header("1) Inserir Ocorrência / Dados")
-                        input_method = st.sidebar.radio("Escolha como inserir ocorrências:", ("Manual (formulário)", "Gerar dataset simulado"))
+                        input_method = st.sidebar.radio("Escolha como inserir ocorrências:", ("Manual (formulário)", "Upload CSV", "Gerar dataset simulado"))
                         
                         # Manual form
                         if input_method == "Manual (formulário)":
@@ -1021,6 +1047,31 @@ def main():
                                     }
                                     add_occurrence(rec)
                                     st.success("Ocorrência adicionada.")
+                        
+                        # CSV upload
+                        elif input_method == "Upload CSV":
+                            uploaded = st.sidebar.file_uploader("Envie um CSV com colunas: date,lote,operador,maquina,defeito,severidade,diametro,LSL,USL,turno", type=["csv"])
+                            if uploaded is not None:
+                                df_up = parse_uploaded_csv(uploaded)
+                                if df_up is not None:
+                                    # append to occurrences
+                                    for _, r in df_up.iterrows():
+                                        rec = {
+                                            "date": pd.to_datetime(r["date"]),
+                                            "lote": r["lote"],
+                                            "operador": r["operador"],
+                                            "maquina": r["maquina"],
+                                            "defeito": r["defeito"],
+                                            "severidade": int(r["severidade"]) if not pd.isna(r["severidade"]) else 1,
+                                            "diametro": float(r["diametro"]) if not pd.isna(r["diametro"]) else np.nan,
+                                            "LSL": float(r["LSL"]) if not pd.isna(r["LSL"]) else np.nan,
+                                            "USL": float(r["USL"]) if not pd.isna(r["USL"]) else np.nan,
+                                            "turno": r["turno"]
+                                        }
+                                        add_occurrence(rec)
+                                    st.success("CSV importado com sucesso.")
+                        
+                        # Simulate dataset
                         else:
                             st.sidebar.write("Gerar dataset simulado (rápido para testes)")
                             ndays = st.sidebar.number_input("dias (simulado)", min_value=7, max_value=60, value=30)
@@ -1052,6 +1103,9 @@ def main():
                                         add_occurrence(rec)
                                 st.success("Dataset simulado criado.")
                         
+                        # ------------------------------
+                        # Main area: tabs for tools
+                        # ------------------------------
                         df_all = df_from_occurrences()
                         st.sidebar.markdown("---")
                         st.sidebar.write(f"Total ocorrências: **{len(df_all)}**")
@@ -1059,8 +1113,11 @@ def main():
                             st.info("Insira ocorrências para habilitar as ferramentas.")
                             st.stop()
                         
-                        tabs = st.tabs(["Visão Geral","Pareto & Estratificação","CEP & Histograma","Ishikawa & 5 Porquês","FMEA & 5W2H","Folha de Verificação"])
+                        tabs = st.tabs(["Visão Geral","Pareto & Estratificação","CEP & Histograma","Ishikawa & 5 Porquês","FMEA & 5W2H","Folha de Verificação","Exportar / Limpar"])
                         
+                        # ------------------------------
+                        # Tab 1: Visão Geral
+                        # ------------------------------
                         with tabs[0]:
                             st.header("📋 Visão Geral dos Dados")
                             st.write("Tabela (filtre clicando nos cabeçalhos):")
@@ -1074,6 +1131,9 @@ def main():
                             st.markdown("**Contagens por defeito (top 10)**")
                             st.bar_chart(df_all["defeito"].value_counts().head(10))
                         
+                        # ------------------------------
+                        # Tab 2: Pareto & Estratificação
+                        # ------------------------------
                         with tabs[1]:
                             st.header("📊 Pareto & Estratificação")
                             st.write("Escolha a coluna para Pareto / estratificação:")
@@ -1083,11 +1143,15 @@ def main():
                             st.write("Tabela com frequência e % acumulado:")
                             df_pareto = pd.DataFrame({"freq":freq, "acum%": cumperc})
                             st.dataframe(df_pareto.reset_index().rename(columns={"index":col_option}))
+                            # interactive: selecionar top causes to include in Ishikawa
                             st.markdown("Selecione causas principais para Ishikawa (opcional):")
                             top_selection = st.multiselect("Causas (usar para Ishikawa)", list(freq.index[:10]))
                             if top_selection:
                                 st.write("Causas selecionadas:", top_selection)
                         
+                        # ------------------------------
+                        # Tab 3: CEP & Histograma
+                        # ------------------------------
                         with tabs[2]:
                             st.header("📈 CEP (XmR) e Histograma / Capabilidade")
                             st.write("Escolha uma variável contínua para análise (se disponível):")
@@ -1102,6 +1166,7 @@ def main():
                                 st.pyplot(fig_xmr)
                                 st.write("Estatísticas:", stats_xmr)
                         
+                                # Histogram + capability (if LSL/USL consistent)
                                 st.subheader("Histograma e Capabilidade")
                                 LSL_vals = df_all["LSL"].dropna().unique()
                                 USL_vals = df_all["USL"].dropna().unique()
@@ -1114,10 +1179,15 @@ def main():
                                 else:
                                     st.info("Insira LSL e USL para calcular Cp/Cpk.")
                         
+                        # ------------------------------
+                        # Tab 4: Ishikawa & 5 Porquês
+                        # ------------------------------
                         with tabs[3]:
                             st.header("🧠 Ishikawa (Diagrama de Causa) & 5 Porquês")
                             st.write("Categorias padrão (6Ms): Máquina, Método, Material, Mão de obra, Medição, Meio ambiente")
+                            # automatic mapping by operator/maquina etc.
                             st.subheader("Ishikawa automático (resumo por categoria)")
+                            # build counts per category using user-supplied 'defeito' and a mapping input
                             st.write("Você pode atribuir categorias para cada defeito (isso alimenta o diagrama).")
                             unique_defects = df_all["defeito"].fillna("Sem Info").unique().tolist()
                             mapping = {}
@@ -1154,6 +1224,9 @@ def main():
                                 for i,a in enumerate(answers,1):
                                     st.write(f"{i}. {a}")
                         
+                        # ------------------------------
+                        # Tab 5: FMEA & 5W2H
+                        # ------------------------------
                         with tabs[4]:
                             st.header("⚠️ FMEA simplificado e 5W2H")
                             st.write("Defina RPN (S×O×D) para cada defeito tipo / situação e gere plano de ação.")
@@ -1196,6 +1269,9 @@ def main():
                                         st.table(df_5w2h)
                                         st.success("5W2H gerado.")
                         
+                        # ------------------------------
+                        # Tab 6: Folha de Verificação
+                        # ------------------------------
                         with tabs[5]:
                             st.header("🗂️ Folha de Verificação (Checksheet)")
                             st.write("Aqui você pode montar uma folha de verificação a partir dos defeitos registrados e gerar uma tabela por período.")
@@ -1213,6 +1289,26 @@ def main():
                                     pivot = pd.crosstab(df_slice["date"].dt.date, df_slice["defeito"])
                                     st.dataframe(pivot)
                                     st.download_button("Download CSV da folha de verificação", data=pivot.to_csv().encode('utf-8'), file_name="folha_verificacao.csv")
+                        
+                        # ------------------------------
+                        # Tab 7: Exportar / Limpar
+                        # ------------------------------
+                        with tabs[6]:
+                            st.header("🔁 Exportar / Limpar dados")
+                            if not df_all.empty:
+                                csv = df_all.to_csv(index=False).encode('utf-8')
+                                st.download_button("Baixar dados (CSV)", data=csv, file_name="ocorrencias_qualidade.csv")
+                            if st.button("Limpar todas ocorrências"):
+                                st.session_state.occurrences = []
+                                st.success("Dados limpos.")
+                            if st.button("Limpar FMEA e 5 Porquês"):
+                                st.session_state.fmea = []
+                                st.session_state.five_whys = {}
+                                st.success("FMEA e 5 Porquês limpos.")
+                        
+                        st.markdown("---")
+                        st.caption("App educativo para praticar ferramentas da qualidade. Desenvolvido para uso em sala de aula — personalize as categorias, defeitos e entradas para criar cenários reais.")
+
                         
                      else:
                         st.header(menu[5])
