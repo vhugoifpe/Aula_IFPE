@@ -665,21 +665,18 @@ def main():
                             })
                         df_table = pd.DataFrame(table).sort_values("ES")
                         
-                        # CORREÇÃO: Criar o objeto Styler separadamente
-                        styled_df = df_table.style.format({
-                            "Duração (te)": "{:.2f}", 
-                            "ES": "{:.2f}", 
-                            "EF": "{:.2f}", 
-                            "LS": "{:.2f}", 
-                            "LF": "{:.2f}", 
-                            "Folga": "{:.2f}",
-                            "Custo normal": "{:.2f}",
-                            "Custo crash": "{:.2f}",
-                            "Crash dur": "{:.2f}"
-                        })
+                        # Formatar as colunas numericamente antes de exibir
+                        df_table["Duração (te)"] = df_table["Duração (te)"].round(2)
+                        df_table["ES"] = df_table["ES"].round(2)
+                        df_table["EF"] = df_table["EF"].round(2)
+                        df_table["LS"] = df_table["LS"].round(2)
+                        df_table["LF"] = df_table["LF"].round(2)
+                        df_table["Folga"] = df_table["Folga"].round(2)
+                        df_table["Custo normal"] = df_table["Custo normal"].round(2)
+                        df_table["Custo crash"] = df_table["Custo crash"].round(2)
+                        df_table["Crash dur"] = df_table["Crash dur"].round(2)
                         
-                        # Passar o objeto Styler como primeiro argumento
-                        st.dataframe(styled_df, use_container_width=True)
+                        st.dataframe(df_table, use_container_width=True)
                         
                         # --------------------------
                         # Gantt chart
