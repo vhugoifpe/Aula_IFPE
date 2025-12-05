@@ -780,16 +780,16 @@ def main():
                         st.subheader("📉 Avaliação Probabilística (PERT)")
                         deadline = st.number_input("Prazo desejado (unidades de tempo) — comparar com duração esperada", min_value=0.0, value=float(cpm["duration"]))
                         mu = cpm["duration"]
-                        sigma = math.sqrt(cpm["var_critical"]) if cpm["var_critical"]>0 else 1e-6
+                        sigma = sqrt(cpm["var_critical"]) if cpm["var_critical"]>0 else 1e-6
                         z = (deadline - mu) / sigma
                         # normal CDF via erf
-                        prob = 0.5 * (1 + math.erf(z / math.sqrt(2)))
+                        prob = 0.5 * (1 + erf(z / sqrt(2)))
                         st.write(f"Média (µ) = {mu:.2f}  •  Desvio padrão (σ) = {sigma:.3f}")
                         st.write(f"Probabilidade aproximada de terminar até {deadline:.2f} = **{prob*100:.2f}%**")
                         
                         # plot normal curve with marker
                         x = np.linspace(mu - 4*sigma, mu + 4*sigma, 200)
-                        pdf = (1/ (sigma * math.sqrt(2*math.pi))) * np.exp(-0.5*((x-mu)/sigma)**2)
+                        pdf = (1/ (sigma * sqrt(2*math.pi))) * np.exp(-0.5*((x-mu)/sigma)**2)
                         fig2, ax2 = plt.subplots(figsize=(8,3))
                         ax2.plot(x, pdf, label="Distribuição Normal aproximada do tempo do projeto")
                         ax2.axvline(deadline, color='red', linestyle='--', label=f"Deadline ({deadline})")
