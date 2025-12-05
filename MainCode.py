@@ -551,15 +551,12 @@ def main():
                         cost_crash = st.number_input("Custo em crashing (R$) - custo total após crash", min_value=0.0, value=2000.0, step=100.0)
                         crash_duration = st.number_input("Duração mínima possível após crash (tempo)", min_value=0.0, value=2.0, step=0.5)
                         
-                        # Obter a nova ID que será usada para esta atividade
                         new_activity_id = next_activity_name()
                         
-                        # Criar lista de opções incluindo a atividade atual que está sendo adicionada
                         existing = [act["id"] for act in st.session_state.activities]
-                        # Adicionar a nova atividade à lista de opções
-                        all_options = existing + [new_activity_id]
+                        all_options = existing
+
                         
-                        # Usar a lista completa para o multiselect
                         deps = st.multiselect("Dependências (atividades que devem terminar antes)", 
                                               options=all_options, 
                                               default=[])
