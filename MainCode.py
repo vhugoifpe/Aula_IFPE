@@ -582,7 +582,7 @@ def main():
                         st.stop()
                     
                     df_acts = pd.DataFrame(st.session_state.activities)
-                    st.dataframe(df_acts[["Id", "a", "m", "b", "te", "var", "Custo", "Custo Crash", "Duração Crash", "deps"]])
+                    st.dataframe(df_acts[["id", "a", "m", "b", "te", "var", "cost_normal", "cost_crash", "crash_duration", "deps"]])
                     
                     def build_dag(activities, duration_key="te"):
                         G = nx.DiGraph()
