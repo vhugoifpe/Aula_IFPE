@@ -543,8 +543,6 @@ def main():
                         n = len(st.session_state.activities)
                         return chr(ord("A") + n)
 
-                    should_rerun=False
-                    
                     with st.sidebar.form("add_activity", clear_on_submit=True):
                         st.header("➕ Adicionar Atividade")
                         a = st.number_input("Tempo otimista (a)", min_value=0.0, value=np.round(np.random.uniform(0,10),2), step=0.5)
@@ -913,9 +911,6 @@ def main():
                         
                         else:
                             st.info("Insira um orçamento > 0 para simular crashing (redução de duração mediante custo).")
-                    
-                    if should_rerun:
-                        st.rerun()
 
                 else:
                      if choice == menu[4]:
