@@ -554,24 +554,23 @@ def main():
                         # Obter a nova ID que será usada para esta atividade
                         new_activity_id = next_activity_name()
                         
-                        # Criar lista de opções incluindo a atividade atual que está sendo adicionada
-                        existing = [act["id"] for act in st.session_state.activities]
-                        # Adicionar a nova atividade à lista de opções
-                        all_options = existing + [new_activity_id]
+                        # Criar lista de opções APENAS com atividades já existentes
+                        # NÃO incluir a nova atividade porque ela não pode depender de si mesma
+                        existing_options = [act["id"] for act in st.session_state.activities]
                         
-                        # Usar a lista completa para o multiselect
+                        # Usar apenas as opções existentes para o multiselect
                         deps = st.multiselect("Dependências (atividades que devem terminar antes)", 
-                                              options=all_options, 
+                                              options=existing_options, 
                                               default=[])
                         
                         add = st.form_submit_button("Adicionar Atividade")
                     
                     # Mover a lógica de adição PARA FORA do formulário
                     if add:
-                        # Verificar se a atividade tem dependência de si mesma (evitar loop)
-                        if new_activity_id in deps:
-                            st.sidebar.error("Uma atividade não pode depender de si mesma!")
-                        elif not (a <= m <= b):
+                        # Removemos a verificação de dependência de si mesma porque agora é impossível
+                        # (a nova atividade não está na lista de opções)
+                        
+                        if not (a <= m <= b):
                             st.sidebar.error("Valide: precisa ser a ≤ m ≤ b")
                         elif crash_duration > m:
                             st.sidebar.error("Duração mínima após crash não pode ser maior que m (duração típica).")
@@ -592,9 +591,7 @@ def main():
                             }
                             st.session_state.activities.append(act)
                             st.sidebar.success(f"Atividade {act['id']} adicionada.")
-                            
-                            # Usar experimental_rerun em vez de rerun
-                            st.experimental_rerun()
+                            st.rerun()
                     
                     st.header("📋 Atividades cadastradas")
                     if len(st.session_state.activities) == 0:
