@@ -580,7 +580,7 @@ def main():
                                 }
                                 st.session_state.activities.append(act)
                                 st.success(f"Atividade {act['id']} adicionada.")
-                                st.rerun()
+                                should_rerun = True
                     
                     st.header("📋 Atividades cadastradas")
                     
@@ -911,6 +911,9 @@ def main():
                         
                         else:
                             st.info("Insira um orçamento > 0 para simular crashing (redução de duração mediante custo).")
+                    
+                    if should_rerun:
+                        st.rerun()
 
                 else:
                      if choice == menu[4]:
