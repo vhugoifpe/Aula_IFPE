@@ -171,7 +171,7 @@ def main():
                         st.experimental_rerun()
                 # show sliders for each factor
                 for f in list(st.session_state.strategy_factors.keys()):
-                    col1, col2, col3 = st.columns([1, 1, 1], gap="small")
+                    col1, col2, col3 = st.columns(3)
                     imp = cols[0].slider(f"Importância — {f}", 1, 5, int(st.session_state.strategy_factors[f][0]), key=f"imp_{f}")
                     cur = cols[1].slider(f"Capacidade Atual — {f}", 1, 5, int(st.session_state.strategy_factors[f][1]), key=f"cur_{f}")
                     des = cols[2].slider(f"Capacidade Desejada — {f}", 1, 5, int(st.session_state.strategy_factors[f][2]), key=f"des_{f}")
