@@ -157,10 +157,6 @@ def main():
         with st.expander("2) Matriz de Estratégia de Operações (Fatores Competitivos) ✔", expanded=False):
             st.markdown("Ajuste importância, capacidade atual e objetivo desejado para cada fator (escala 1—5).")
             
-            # Usar um contador único para garantir chaves únicas
-            if 'factor_counter' not in st.session_state:
-                st.session_state.factor_counter = 0
-            
             # Layout principal
             main_col1, main_col2 = st.columns([2, 1])
             
@@ -174,7 +170,6 @@ def main():
                 if st.button("Adicionar Fator", key="add_factor_btn"):
                     if new_factor and new_factor.strip() and new_factor.strip() not in st.session_state.strategy_factors:
                         st.session_state.strategy_factors[new_factor.strip()] = [3, 3, 3]
-                        st.session_state.factor_counter += 1
                         st.rerun()
                 
                 # Mostrar sliders para cada fator
@@ -184,48 +179,51 @@ def main():
                 # Criar uma cópia das chaves para evitar problemas durante iteração
                 factor_keys = list(st.session_state.strategy_factors.keys())
                 
+                # Vamos criar os controles de forma diferente - sem colunas aninhadas
                 for idx, fator in enumerate(factor_keys):
                     st.markdown(f"**{fator}**")
                     
-                    # Criar colunas para este fator específico
+                    # Em vez de criar colunas, vamos usar uma abordagem diferente
+                    # Criar uma linha com 3 colunas usando HTML/CSS ou layout flex
+                    # Mas primeiro, vamos verificar se há fatores
+                    
+                    # Vamos usar uma abordagem mais simples: controles na vertical
+                    current_values = st.session_state.strategy_factors[fator]
+                    
                     col1, col2, col3 = st.columns(3)
                     
                     with col1:
-                        # Usar índice único junto com o nome do fator para a chave
-                        current_imp = st.session_state.strategy_factors[fator][0]
                         imp = st.slider(
-                            "Importância", 
+                            f"Importância — {fator}", 
                             1, 5, 
-                            value=int(current_imp),
-                            key=f"imp_{idx}_{fator}_{st.session_state.factor_counter}"
+                            value=int(current_values[0]),
+                            key=f"imp_{fator}_{idx}"
                         )
                     
                     with col2:
-                        current_cur = st.session_state.strategy_factors[fator][1]
                         cur = st.slider(
-                            "Capacidade Atual", 
+                            f"Capacidade Atual — {fator}", 
                             1, 5, 
-                            value=int(current_cur),
-                            key=f"cur_{idx}_{fator}_{st.session_state.factor_counter}"
+                            value=int(current_values[1]),
+                            key=f"cur_{fator}_{idx}"
                         )
                     
                     with col3:
-                        current_des = st.session_state.strategy_factors[fator][2]
                         des = st.slider(
-                            "Capacidade Desejada", 
+                            f"Capacidade Desejada — {fator}", 
                             1, 5, 
-                            value=int(current_des),
-                            key=f"des_{idx}_{fator}_{st.session_state.factor_counter}"
+                            value=int(current_values[2]),
+                            key=f"des_{fator}_{idx}"
                         )
                     
                     # Atualizar os valores no session_state
                     st.session_state.strategy_factors[fator] = [imp, cur, des]
                     
-                    # Botão para remover fator (opcional)
-                    if st.button(f"Remover {fator}", key=f"remove_{idx}_{fator}"):
-                        del st.session_state.strategy_factors[fator]
-                        st.session_state.factor_counter += 1
-                        st.rerun()
+                    # Botão para remover fator
+                    if st.button(f"Remover {fator}", key=f"remove_{fator}_{idx}"):
+                        if fator in st.session_state.strategy_factors:
+                            del st.session_state.strategy_factors[fator]
+                            st.rerun()
                     
                     st.markdown("---")
             
