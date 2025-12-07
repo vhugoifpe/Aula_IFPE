@@ -247,8 +247,8 @@ def main():
                         # Formatar o Gap para 2 casas decimais
                         gap_df["Gap"] = gap_df["Gap"].round(2)
                         
-                        # Mostrar tabela
-                        st.dataframe(gap_df, use_container_width=True, hide_index=True)
+                        # Mostrar tabela - SEM use_container_width (versão antiga do Streamlit)
+                        st.dataframe(gap_df)
                         
                         # Estatísticas
                         col_stat1, col_stat2 = st.columns(2)
@@ -273,9 +273,12 @@ def main():
                         
                 except Exception as e:
                     st.error(f"Erro ao calcular análise: {str(e)}")
-                    # Mostrar os valores atuais para debug
-                    with st.expander("Debug - Valores atuais"):
-                        st.write(st.session_state.strategy_factors)
+                    # Mostrar os valores atuais para debug - CORRIGINDO A INDENTAÇÃO
+                    expander_debug = st.expander("Debug - Valores atuais")
+                    with expander_debug:
+                        st.write("Valores atuais:")
+                        for k, v in st.session_state.strategy_factors.items():
+                            st.write(f"{k}: {v}")
             else:
                 st.info("Adicione fatores para ver a análise.")
         
