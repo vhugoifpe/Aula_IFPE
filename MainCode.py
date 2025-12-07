@@ -148,7 +148,7 @@ def main():
                 ax.set_xlim(0,5)
                 ax.set_yticks([])
                 ax.set_xlabel("Escala 1-5")
-                ax.set_title("Diagnóstico Hayes (velocímetro simplificado)")
+                ax.set_title("Diagnóstico Hayes")
                 st.pyplot(fig)
         
         # -------------------------
@@ -157,8 +157,8 @@ def main():
         with st.expander("2) Matriz de Estratégia de Operações (Fatores Competitivos) ✔", expanded=False):
             st.markdown("Ajuste importância, capacidade atual e objetivo desejado para cada fator (escala 1—5).")
             # allow adding up to 5 custom factors
-            col1, col2 = st.columns([2,1])
-            with col1:
+            col1_main, col2_main = st.columns([2,1])
+            with col1_main:
                 st.write("Fatores (padrão + personalizados)")
                 # show current factors and sliders
                 factors = st.session_state.strategy_factors.copy()
@@ -171,12 +171,16 @@ def main():
                         st.experimental_rerun()
                 # show sliders for each factor
                 for f in list(st.session_state.strategy_factors.keys()):
-                    col1, col2, col3 = st.columns(3)
-                    imp = cols[0].slider(f"Importância — {f}", 1, 5, int(st.session_state.strategy_factors[f][0]), key=f"imp_{f}")
-                    cur = cols[1].slider(f"Capacidade Atual — {f}", 1, 5, int(st.session_state.strategy_factors[f][1]), key=f"cur_{f}")
-                    des = cols[2].slider(f"Capacidade Desejada — {f}", 1, 5, int(st.session_state.strategy_factors[f][2]), key=f"des_{f}")
+                    # CORREÇÃO: Renomeei as colunas internas para evitar conflito
+                    col_imp, col_cur, col_des = st.columns(3)
+                    with col_imp:
+                        imp = st.slider(f"Importância — {f}", 1, 5, int(st.session_state.strategy_factors[f][0]), key=f"imp_{f}")
+                    with col_cur:
+                        cur = st.slider(f"Capacidade Atual — {f}", 1, 5, int(st.session_state.strategy_factors[f][1]), key=f"cur_{f}")
+                    with col_des:
+                        des = st.slider(f"Capacidade Desejada — {f}", 1, 5, int(st.session_state.strategy_factors[f][2]), key=f"des_{f}")
                     st.session_state.strategy_factors[f] = [imp, cur, des]
-            with col2:
+            with col2_main:
                 st.write("Visão rápida:")
                 # compute gaps
                 gaps = {k: st.session_state.strategy_factors[k][2] - st.session_state.strategy_factors[k][1] for k in st.session_state.strategy_factors}
