@@ -156,37 +156,108 @@ def main():
         # -------------------------
         with st.expander("2) Matriz de Estratégia de Operações (Fatores Competitivos) ✔", expanded=False):
             st.markdown("Ajuste importância, capacidade atual e objetivo desejado para cada fator (escala 1—5).")
-            # allow adding up to 5 custom factors
-            col1_main, col2_main = st.columns([2,1])
-            with col1_main:
+            
+            # Usar um contador único para garantir chaves únicas
+            if 'factor_counter' not in st.session_state:
+                st.session_state.factor_counter = 0
+            
+            # Layout principal
+            main_col1, main_col2 = st.columns([2, 1])
+            
+            with main_col1:
                 st.write("Fatores (padrão + personalizados)")
-                # show current factors and sliders
-                factors = st.session_state.strategy_factors.copy()
-                # allow user to add a new factor
-                new_factor = st.text_input("Adicionar fator personalizado (nome) — deixe vazio se não quiser", key="new_factor")
-                if new_factor:
-                    if new_factor not in factors:
-                        factors[new_factor] = [3,3,3]
-                        st.session_state.strategy_factors[new_factor] = [3,3,3]
-                        st.experimental_rerun()
-                # show sliders for each factor
-                for f in list(st.session_state.strategy_factors.keys()):
-                    # CORREÇÃO: Renomeei as colunas internas para evitar conflito
-                    col_imp, col_cur, col_des = st.columns(3)
-                    with col_imp:
-                        imp = st.slider(f"Importância — {f}", 1, 5, int(st.session_state.strategy_factors[f][0]), key=f"imp_{f}")
-                    with col_cur:
-                        cur = st.slider(f"Capacidade Atual — {f}", 1, 5, int(st.session_state.strategy_factors[f][1]), key=f"cur_{f}")
-                    with col_des:
-                        des = st.slider(f"Capacidade Desejada — {f}", 1, 5, int(st.session_state.strategy_factors[f][2]), key=f"des_{f}")
-                    st.session_state.strategy_factors[f] = [imp, cur, des]
-            with col2_main:
-                st.write("Visão rápida:")
-                # compute gaps
-                gaps = {k: st.session_state.strategy_factors[k][2] - st.session_state.strategy_factors[k][1] for k in st.session_state.strategy_factors}
-                gap_df = pd.DataFrame.from_dict({"Gap": gaps}).sort_values("Gap", ascending=False)
-                st.dataframe(gap_df)
-                st.markdown("Fatores com maior gap devem ser priorizados.")
+                
+                # Permitir adicionar novo fator
+                new_factor = st.text_input("Adicionar fator personalizado (nome) — deixe vazio se não quiser", 
+                                         key="new_factor_input")
+                
+                if st.button("Adicionar Fator", key="add_factor_btn"):
+                    if new_factor and new_factor.strip() and new_factor.strip() not in st.session_state.strategy_factors:
+                        st.session_state.strategy_factors[new_factor.strip()] = [3, 3, 3]
+                        st.session_state.factor_counter += 1
+                        st.rerun()
+                
+                # Mostrar sliders para cada fator
+                st.markdown("---")
+                st.markdown("**Ajuste os valores:**")
+                
+                # Criar uma cópia das chaves para evitar problemas durante iteração
+                factor_keys = list(st.session_state.strategy_factors.keys())
+                
+                for idx, fator in enumerate(factor_keys):
+                    st.markdown(f"**{fator}**")
+                    
+                    # Criar colunas para este fator específico
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        # Usar índice único junto com o nome do fator para a chave
+                        current_imp = st.session_state.strategy_factors[fator][0]
+                        imp = st.slider(
+                            "Importância", 
+                            1, 5, 
+                            value=int(current_imp),
+                            key=f"imp_{idx}_{fator}_{st.session_state.factor_counter}"
+                        )
+                    
+                    with col2:
+                        current_cur = st.session_state.strategy_factors[fator][1]
+                        cur = st.slider(
+                            "Capacidade Atual", 
+                            1, 5, 
+                            value=int(current_cur),
+                            key=f"cur_{idx}_{fator}_{st.session_state.factor_counter}"
+                        )
+                    
+                    with col3:
+                        current_des = st.session_state.strategy_factors[fator][2]
+                        des = st.slider(
+                            "Capacidade Desejada", 
+                            1, 5, 
+                            value=int(current_des),
+                            key=f"des_{idx}_{fator}_{st.session_state.factor_counter}"
+                        )
+                    
+                    # Atualizar os valores no session_state
+                    st.session_state.strategy_factors[fator] = [imp, cur, des]
+                    
+                    # Botão para remover fator (opcional)
+                    if st.button(f"Remover {fator}", key=f"remove_{idx}_{fator}"):
+                        del st.session_state.strategy_factors[fator]
+                        st.session_state.factor_counter += 1
+                        st.rerun()
+                    
+                    st.markdown("---")
+            
+            with main_col2:
+                st.write("**Visão rápida:**")
+                
+                # Calcular gaps
+                if st.session_state.strategy_factors:
+                    gaps = {}
+                    for k, v in st.session_state.strategy_factors.items():
+                        if len(v) >= 3:
+                            gaps[k] = v[2] - v[1]
+                    
+                    if gaps:
+                        gap_df = pd.DataFrame.from_dict(
+                            {"Fator": list(gaps.keys()), "Gap": list(gaps.values())}
+                        ).sort_values("Gap", ascending=False)
+                        
+                        st.dataframe(gap_df.set_index("Fator"), use_container_width=True)
+                        st.markdown("**Fatores com maior gap devem ser priorizados.**")
+                    else:
+                        st.info("Nenhum fator para mostrar.")
+                else:
+                    st.info("Adicione fatores para começar.")
+                
+                # Mostrar estatísticas resumidas
+                st.markdown("**Estatísticas:**")
+                if st.session_state.strategy_factors:
+                    total_factors = len(st.session_state.strategy_factors)
+                    avg_gap = sum([v[2] - v[1] for v in st.session_state.strategy_factors.values()]) / total_factors
+                    st.metric("Total de Fatores", total_factors)
+                    st.metric("Gap Médio", f"{avg_gap:.2f}")
         
         # -------------------------
         # IPA (Importance × Performance) Module
