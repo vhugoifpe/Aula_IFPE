@@ -35,125 +35,343 @@ def main():
     #################################################################################################################################################################################
     if choice == menu[0]:
         st.header(menu[0])
-        st.subheader("Indique o cenário inicial da sua empresa:")
-        Custo=st.selectbox("Custo", options= ["Baixo","Baixo/Médio","Médio","Médio/Alto","Alto"], help="Selecione o nível de custo da sua empresa.")
-        Qual=st.selectbox("Qualidade", options= ["Baixa","Média","Alta"], help="Selecione o nível de qualidade do produto da sua empresa.")
-        Flex=st.selectbox("Flexibilidade", options= ["Baixa","Média","Alta"], help="Selecione o nível de flexibilidade do produto da sua empresa.")
-        Entrega=st.selectbox("Entrega", options= ["Lenta","Média","Rápida"], help="Selecione o nível de entrega do produto da sua empresa.")
-        Inov=st.selectbox("Inovação Tecnológica",options= ["Tradicional","Média","Inovativa"], help="Selecione o nível de inovação do produto da sua empresa.")
-        Cap=st.selectbox("Capacidade", options= ["No Limite","Próxima ao Limite","Com Folga"], help="Selecione a que nível de capacidade se encontra a linha do produto da sua empresa.")
-        Prev=st.selectbox("Previsão de Demanda", options= ["Pouco Precisa","Erros Aceitáveis","Precisa"], help="Selecione o nível de previsão de demanda do produto da sua empresa.")
-        st.subheader("Indique o cenário da concorrência em relação à sua empresa, onde os extremos significam que não há concorrência e que quão maior, melhor a concorrência está:")
-        critérios = {
-        'Custo': "Nível de custo da concorrência",
-        'Qualidade': "Nível de qualidade da concorrência",
-        'Flexibilidade': "Nível de flexibilidade da concorrência",
-        'Entrega': "Nível de entrega da concorrência",
-        'Inovação Tecnológica': "Nível de inovação da concorrência",
-        'Capacidade': "Nível de capacidade da concorrência",
-        'Previsão de Demanda': "Nível de previsão da concorrência"
-        }
+        # app_strategy.py
+        if "hayes_answers" not in st.session_state:
+            st.session_state.hayes_answers = {}
         
-        cenario = {}
-        medias=[]
-        dev=[]
-        for criterio, help_text in critérios.items():
-            with st.expander(f"⚙️ {criterio}", expanded=False):
-                col1, col2 = st.columns(2)
-                with col1:
-                    media = st.slider(
-                        f"Média",
-                        min_value=0.0,
-                        max_value=1.0,
-                        value=0.5,
-                        step=0.01,
-                        help=f"{help_text} - Média"
-                    )
-                with col2:
-                    desvio_padrao = st.slider(
-                        f"Desvio-padrão",
-                        min_value=0.0,
-                        max_value=0.5,
-                        value=0.1,
-                        step=0.01,
-                        help=f"{help_text} - Desvio-padrão"
-                    )
-            medias.append(media)
-            dev.append(desvio_padrao)
-        st.subheader("Defina os pesos dos critérios competitivos (Total deve somar 100%)")
-        criterios = {
-            "Custo": "Importância do custo na competitividade",
-            "Qualidade": "Importância da qualidade na competitividade",
-            "Flexibilidade": "Importância da flexibilidade na competitividade",
-            "Entrega": "Importância da entrega na competitividade",
-            "Inovação Tecnológica": "Importância da inovação na competitividade",
-            "Capacidade": "Importância da capacidade na competitividade",
-            "Previsão de Demanda": "Importância da previsão na competitividade"
-        }
+        if "strategy_factors" not in st.session_state:
+            # default factors: key -> (importance, current, desired) scales 1-5
+            st.session_state.strategy_factors = {
+                "Custo": [3, 3, 4],
+                "Qualidade": [4, 3, 5],
+                "Flexibilidade": [3, 2, 4],
+                "Entrega (lead time)": [3, 3, 4],
+                "Inovação": [2, 2, 3]
+            }
         
-        pesos = {}
-        total = 0
-        st.markdown("### Ajuste os pesos:")
-        for i, (criterio, ajuda) in enumerate(criterios.items()):
-            peso = st.slider(
-                f"Peso de {criterio} (%)",
-                min_value=0,
-                max_value=100,
-                value=15 if i == 0 else 14, 
-                step=1,
-                help=ajuda,
-                key=f"peso_{criterio}"
+        if "ipa_values" not in st.session_state:
+            # reuse strategy_factors importance & performance as IPA defaults
+            st.session_state.ipa_values = {}
+        
+        if "porter" not in st.session_state:
+            st.session_state.porter = {
+                "Ameaça Entrantes": 5,
+                "Poder Fornecedores": 5,
+                "Poder Compradores": 5,
+                "Ameaça Substitutos": 5,
+                "Rivalidade": 5
+            }
+        
+        if "swot" not in st.session_state:
+            st.session_state.swot = {"Forças": [], "Fraquezas": [], "Oportunidades": [], "Ameaças": []}
+        
+        
+        # -------------------------
+        # Helpers: plotting utils
+        # -------------------------
+        def radar_plot(categories, values_list, labels, title="Radar"):
+            N = len(categories)
+            angles = [n / float(N) * 2 * np.pi for n in range(N)]
+            angles += angles[:1]
+            fig, ax = plt.subplots(figsize=(6,5), subplot_kw=dict(polar=True))
+            for values, lab in zip(values_list, labels):
+                vals = list(values)
+                vals += vals[:1]
+                ax.plot(angles, vals, linewidth=2, label=lab)
+                ax.fill(angles, vals, alpha=0.15)
+            ax.set_thetagrids(np.degrees(angles[:-1]), categories)
+            ax.set_ylim(0,5)
+            ax.set_title(title)
+            ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1))
+            plt.tight_layout()
+            return fig
+        
+        def porter_radar(porter_dict):
+            cats = list(porter_dict.keys())
+            vals = [porter_dict[k] for k in cats]
+            return radar_plot(cats, [vals], ["Porter (0-10)"], title="Cinco Forças de Porter")
+        
+        def strategy_radar(factors_dict):
+            cats = list(factors_dict.keys())
+            current = [factors_dict[c][1] for c in cats]
+            desired = [factors_dict[c][2] for c in cats]
+            return radar_plot(cats, [current, desired], ["Atual","Desejado"], title="Capacidades: Atual vs Desejado")
+        
+        # -------------------------
+        # Hayes & Wheelwright Module
+        # -------------------------
+        with st.expander("1) Hayes & Wheelwright — Diagnóstico (Clique para abrir) ✔", expanded=True):
+            st.markdown(
+                "Responda às afirmações abaixo (escala 1—5). O app colocará sua operação em um dos 4 estágios de Hayes & Wheelwright."
             )
-            pesos[criterio] = peso
-            total += peso
-        if total!=100:
-            st.error(f"❌ Excesso de {total-100}%")
-        st.subheader("Resultados da Simulação")
-        if total == 100:
-            mapa_escala = {"Baixo": 0.8, "Baixo/Médio": 0.65, "Médio": 0.5,
-                "Médio/Alto": 0.35, "Alto": 0.2,
-                "Baixa": 0.2, "Média": 0.5, "Alta": 0.8,
-                "Lenta": 0.2, "Média": 0.5, "Rápida": 0.8,
-                "Tradicional": 0.3, "Média": 0.5, "Inovativa": 0.9,
-                "No Limite": 0.3, "Próxima ao Limite": 0.5, "Com Folga": 0.8,
-                "Pouco Precisa": 0.3, "Erros Aceitáveis": 0.5, "Precisa": 0.85}
-            desempenho_empresa = {"Custo": mapa_escala[Custo],
-                "Qualidade": mapa_escala[Qual],
-                "Flexibilidade": mapa_escala[Flex],
-                "Entrega": mapa_escala[Entrega],
-                "Inovação Tecnológica": mapa_escala[Inov],
-                "Capacidade": mapa_escala[Cap],
-                "Previsão de Demanda": mapa_escala[Prev]}
-        resultados_concorrencia = {}
+            hayes_qs = {
+                "Integração da manufatura com a estratégia corporativa": "hayes_q1",
+                "Foco em melhoria contínua e KPIs de desempenho": "hayes_q2",
+                "Grau de automação e tecnologia aplicada": "hayes_q3",
+                "Participação da produção nas decisões estratégicas": "hayes_q4",
+                "Flexibilidade/aptidão para mudanças de produto/processo": "hayes_q5",
+                "Foco em qualidade e confiabilidade como diferencial": "hayes_q6"
+            }
+            cols = st.columns(2)
+            i = 0
+            for text, key in hayes_qs.items():
+                col = cols[i % 2]
+                st.session_state.hayes_answers[key] = col.slider(text, 1, 5, int(st.session_state.hayes_answers.get(key, 3)), key=key)
+                i += 1
+        
+            if st.button("Avaliar Hayes & Wheelwright"):
+                vals = list(st.session_state.hayes_answers.values())
+                score = sum(vals) / len(vals)  # average 1-5
+                # map average to stages
+                if score < 2.0:
+                    stage = 1
+                    stage_name = "Estágio 1 — Internamente Neutro (Operações reativas)"
+                elif score < 3.0:
+                    stage = 2
+                    stage_name = "Estágio 2 — Externamente Neutro (Operações eficientes, pouco estratégicas)"
+                elif score < 4.0:
+                    stage = 3
+                    stage_name = "Estágio 3 — Internamente Suporte (Operações alinhadas e proativas)"
+                else:
+                    stage = 4
+                    stage_name = "Estágio 4 — Externamente Suporte (Operações como vantagem competitiva)"
+                st.session_state.hayes_stage = {"score": score, "stage": stage, "name": stage_name}
+                st.success(f"Avaliação completa — {stage_name} (pontuação média: {score:.2f})")
+        
+            if "hayes_stage" in st.session_state:
+                hs = st.session_state.hayes_stage
+                st.metric("Pontuação média (1-5)", f"{hs['score']:.2f}")
+                st.info(hs["name"])
+                # simple bar visualization of stage
+                fig, ax = plt.subplots(figsize=(6,1.2))
+                ax.barh([0], [hs['score']], color='tab:blue', height=0.5)
+                ax.set_xlim(0,5)
+                ax.set_yticks([])
+                ax.set_xlabel("Escala 1-5")
+                ax.set_title("Diagnóstico Hayes (velocímetro simplificado)")
+                st.pyplot(fig)
+        
+        # -------------------------
+        # Strategy Matrix Module
+        # -------------------------
+        with st.expander("2) Matriz de Estratégia de Operações (Fatores Competitivos) ✔", expanded=False):
+            st.markdown("Ajuste importância, capacidade atual e objetivo desejado para cada fator (escala 1—5).")
+            # allow adding up to 5 custom factors
+            col1, col2 = st.columns([2,1])
+            with col1:
+                st.write("Fatores (padrão + personalizados)")
+                # show current factors and sliders
+                factors = st.session_state.strategy_factors.copy()
+                # allow user to add a new factor
+                new_factor = st.text_input("Adicionar fator personalizado (nome) — deixe vazio se não quiser", key="new_factor")
+                if new_factor:
+                    if new_factor not in factors:
+                        factors[new_factor] = [3,3,3]
+                        st.session_state.strategy_factors[new_factor] = [3,3,3]
+                        st.experimental_rerun()
+                # show sliders for each factor
+                for f in list(st.session_state.strategy_factors.keys()):
+                    cols = st.columns([1,1,1])
+                    imp = cols[0].slider(f"Importância — {f}", 1, 5, int(st.session_state.strategy_factors[f][0]), key=f"imp_{f}")
+                    cur = cols[1].slider(f"Capacidade Atual — {f}", 1, 5, int(st.session_state.strategy_factors[f][1]), key=f"cur_{f}")
+                    des = cols[2].slider(f"Capacidade Desejada — {f}", 1, 5, int(st.session_state.strategy_factors[f][2]), key=f"des_{f}")
+                    st.session_state.strategy_factors[f] = [imp, cur, des]
+            with col2:
+                st.write("Visão rápida:")
+                # compute gaps
+                gaps = {k: st.session_state.strategy_factors[k][2] - st.session_state.strategy_factors[k][1] for k in st.session_state.strategy_factors}
+                gap_df = pd.DataFrame.from_dict({"Gap": gaps}).sort_values("Gap", ascending=False)
+                st.dataframe(gap_df)
+                st.markdown("Fatores com maior gap devem ser priorizados.")
+        
+        # -------------------------
+        # IPA (Importance × Performance) Module
+        # -------------------------
+        with st.expander("3) Matriz Importância × Desempenho (IPA) ✔", expanded=False):
+            st.markdown("Usa-se importância e desempenho (performance). Aqui reutilizamos os valores definidos na Matriz de Estratégia.")
+            # build df from strategy_factors
+            df_ip = pd.DataFrame([
+                {"Fator": k, "Importancia": v[0], "Desempenho": v[1]}
+                for k,v in st.session_state.strategy_factors.items()
+            ])
+            st.dataframe(df_ip.set_index("Fator"))
+            st.markdown("Gráfico IPA (quadrantes).")
+            # compute means to define quadrants
+            imp_mean = df_ip["Importancia"].mean()
+            perf_mean = df_ip["Desempenho"].mean()
+            fig, ax = plt.subplots(figsize=(6,6))
+            ax.axvline(imp_mean, color='gray', linestyle='--')
+            ax.axhline(perf_mean, color='gray', linestyle='--')
+            xs = df_ip["Importancia"]
+            ys = df_ip["Desempenho"]
+            for i, row in df_ip.iterrows():
+                ax.scatter(row["Importancia"], row["Desempenho"], s=100)
+                ax.text(row["Importancia"]+0.05, row["Desempenho"]+0.05, row["Fator"], fontsize=9)
+            ax.set_xlim(0.5,5.5)
+            ax.set_ylim(0.5,5.5)
+            ax.set_xlabel("Importância")
+            ax.set_ylabel("Desempenho")
+            ax.set_title("IPA — Importance vs Performance")
+            st.pyplot(fig)
+            st.write("Interpretação automática:")
+            for _, r in df_ip.iterrows():
+                if r["Importancia"] >= imp_mean and r["Desempenho"] < perf_mean:
+                    st.write(f"- **Concentre-se** em: {r['Fator']} (alta importância, desempenho abaixo da média).")
+                elif r["Importancia"] >= imp_mean and r["Desempenho"] >= perf_mean:
+                    st.write(f"- **Manter/Refinar**: {r['Fator']} (alto impacto, desempenho bom).")
+                elif r["Importancia"] < imp_mean and r["Desempenho"] >= perf_mean:
+                    st.write(f"- **Possível excesso**: {r['Fator']} (baixo impacto, desempenho alto).")
+                else:
+                    st.write(f"- **Baixa prioridade**: {r['Fator']} (baixo impacto, desempenho baixo).")
+        
+        # -------------------------
+        # Porter Module
+        # -------------------------
+        with st.expander("4) Modelo das Cinco Forças de Porter ✔", expanded=False):
+            st.markdown("Avalie cada força de 0 (fraca) a 10 (forte). Quanto mais forte, maior a pressão competitiva.")
+            for k in st.session_state.porter.keys():
+                st.session_state.porter[k] = st.slider(k, 0, 10, int(st.session_state.porter[k]), key=f"porter_{k}")
+            # show radar-like summary
+            porter_fig = porter_radar(st.session_state.porter)
+            st.pyplot(porter_fig)
+            # interpretation heuristics
+            total_force = sum(st.session_state.porter.values())
+            st.write(f"Intensidade média das forças: {total_force/5:.2f} (0-10)")
+            if total_force/5 >= 7:
+                st.warning("Ambiente altamente competitivo — recomenda-se estratégias defensivas e diferenciação de operações.")
+            elif total_force/5 >= 4:
+                st.info("Ambiente moderado — oportunidades de vantagem requerem foco.")
+            else:
+                st.success("Ambiente favorável — baixa pressão competitiva.")
+        
+        # -------------------------
+        # SWOT Module
+        # -------------------------
+        with st.expander("5) Matriz SWOT — Forças, Fraquezas, Oportunidades, Ameaças ✔", expanded=False):
+            st.markdown("Adicione itens (uma linha por item). Use botão 'Adicionar' para incluir ao conjunto.")
+            col_a, col_b = st.columns(2)
+            with col_a:
+                new_force = st.text_input("Nova Força", key="in_force")
+                if st.button("Adicionar Força"):
+                    if new_force.strip():
+                        st.session_state.swot["Forças"].append(new_force.strip())
+                        st.success("Força adicionada.")
+            with col_b:
+                new_weak = st.text_input("Nova Fraqueza", key="in_weak")
+                if st.button("Adicionar Fraqueza"):
+                    if new_weak.strip():
+                        st.session_state.swot["Fraquezas"].append(new_weak.strip())
+                        st.success("Fraqueza adicionada.")
+            col_c, col_d = st.columns(2)
+            with col_c:
+                new_opp = st.text_input("Nova Oportunidade", key="in_opp")
+                if st.button("Adicionar Oportunidade"):
+                    if new_opp.strip():
+                        st.session_state.swot["Oportunidades"].append(new_opp.strip())
+                        st.success("Oportunidade adicionada.")
+            with col_d:
+                new_threat = st.text_input("Nova Ameaça", key="in_threat")
+                if st.button("Adicionar Ameaça"):
+                    if new_threat.strip():
+                        st.session_state.swot["Ameaças"].append(new_threat.strip())
+                        st.success("Ameaça adicionada.")
+            st.markdown("Itens atuais:")
+            st.write("**Forças:**", st.session_state.swot["Forças"])
+            st.write("**Fraquezas:**", st.session_state.swot["Fraquezas"])
+            st.write("**Oportunidades:**", st.session_state.swot["Oportunidades"])
+            st.write("**Ameaças:**", st.session_state.swot["Ameaças"])
+        
+        # -------------------------
+        # Generate Summary & Recommendations
+        # -------------------------
+        st.markdown("---")
+        st.header("Resumo final e recomendações")
+        if st.button("Gerar Resumo Estratégico"):
+            # Hayes summary
+            hayes = st.session_state.get("hayes_stage", None)
+            if hayes is None:
+                st.warning("Complete a avaliação Hayes & Wheelwright para incluir no resumo.")
+            # strategy gaps
+            gaps = {k: v[2] - v[1] for k,v in st.session_state.strategy_factors.items()}
+            sorted_gaps = sorted(gaps.items(), key=lambda x: x[1], reverse=True)
+            # IPA priorities
+            df_ip = pd.DataFrame([
+                {"Fator": k, "Importancia": v[0], "Desempenho": v[1], "Gap": v[2]-v[1]}
+                for k,v in st.session_state.strategy_factors.items()
+            ])
+            focus_items = df_ip[(df_ip["Importancia"]>=df_ip["Importancia"].mean()) & (df_ip["Desempenho"]<df_ip["Desempenho"].mean())]["Fator"].tolist()
+            # Porter interpretation
+            porter_avg = sum(st.session_state.porter.values())/5.0
+            # SWOT quick strategy generation: combine top strengths with top opportunities, etc.
+            strengths = st.session_state.swot["Forças"][:3]
+            opportunities = st.session_state.swot["Oportunidades"][:3]
+            weaknesses = st.session_state.swot["Fraquezas"][:3]
+            threats = st.session_state.swot["Ameaças"][:3]
+            st.subheader("1) Snapshot Hayes & Wheelwright")
+            if hayes:
+                st.write(f"- Estágio detectado: **{hayes['name']}** (score {hayes['score']:.2f})")
+            else:
+                st.write("- Hayes não avaliado (complete o módulo 1).")
+        
+            st.subheader("2) Gaps Estratégicos (capacidade desejada − atual)")
+            gdf = pd.DataFrame(sorted_gaps, columns=["Fator","Gap"])
+            st.table(gdf.head(8).style.format({"Gap":"{:.1f}"}))
+        
+            st.subheader("3) Itens prioritários pela IPA")
+            if focus_items:
+                for it in focus_items:
+                    st.write(f"- {it}")
+            else:
+                st.write("Nenhum item crítico identificado via IPA (usar gaps e importância para priorizar).")
+        
+            st.subheader("4) Cinco Forças — síntese")
+            st.write(f"Média de intensidade: **{porter_avg:.2f}** (0 fraca — 10 forte)")
+            if porter_avg >= 7:
+                st.write("- Ambiente competitivo elevado → sugerir diferenciação via qualidade/entrega/tecnologia.")
+            elif porter_avg >= 4:
+                st.write("- Ambiente com competição moderada → priorizar eficiência nos fatores de vantagem.")
+            else:
+                st.write("- Ambiente favorável → explorar crescimento e vantagem de custo.")
+        
+            st.subheader("5) SWOT — Estratégias geradas automaticamente")
+            def make_strategies(F, O, W, T):
+                strategies = {"FO":[],"FA":[],"DO":[],"DA":[]}
+                # FO: use top strengths to exploit top opportunities
+                for s in F:
+                    for o in O:
+                        strategies["FO"].append(f"Use '{s}' para aproveitar '{o}'")
+                # FA: use strengths to mitigate threats
+                for s in F:
+                    for t in T:
+                        strategies["FA"].append(f"Utilizar '{s}' para reduzir impacto de '{t}'")
+                # DO: fix weaknesses to grab opportunities
+                for w in W:
+                    for o in O:
+                        strategies["DO"].append(f"Melhorar '{w}' para aproveitar '{o}'")
+                # DA: minimize weaknesses to avoid threats
+                for w in W:
+                    for t in T:
+                        strategies["DA"].append(f"Mitigar '{w}' para reduzir risco de '{t}'")
+                return strategies
+            strategies = make_strategies(strengths, opportunities, weaknesses, threats)
+            st.write("FO (usar forças para oportunidades):")
+            for s in strategies["FO"][:6]:
+                st.write("-", s)
+            st.write("FA (usar forças para mitigar ameaças):")
+            for s in strategies["FA"][:6]:
+                st.write("-", s)
+            st.write("DO (reduzir fraquezas para aproveitar oportunidades):")
+            for s in strategies["DO"][:6]:
+                st.write("-", s)
+            st.write("DA (reduzir fraquezas e evitar ameaças):")
+            for s in strategies["DA"][:6]:
+                st.write("-", s)
+        
+            st.markdown("---")
+            st.success("Resumo gerado. Use os blocos acima para ajustar inputs e gerar novas recomendações.")
+        else:
+            st.info("Preencha os módulos e clique em 'Gerar Resumo Estratégico' quando quiser consolidar as recomendações.")
 
-        idx=0
-        for criterio in criterios.keys():
-            sim = np.random.normal(medias[idx], dev[idx], 500)
-            idx+=1
-            sim = np.clip(sim, 0, 1)
-            resultados_concorrencia[criterio] = sim.mean()
-        score_empresa = 0
-        score_concorrencia = 0
-    
-        for criterio in criterios.keys():
-            peso = pesos[criterio] / 100
-            score_empresa += desempenho_empresa[criterio] * peso
-            score_concorrencia += resultados_concorrencia[criterio] * peso
-    
-        df_resultado = pd.DataFrame({
-            "Critério": list(criterios.keys()),
-            "Empresa": [desempenho_empresa[c] for c in criterios.keys()],
-            "Concorrência (simulada)": [resultados_concorrencia[c] for c in criterios.keys()],
-            "Peso (%)": [pesos[c] for c in criterios.keys()]
-        })
-    
-        st.markdown("## 🧮 **Desempenho Global Ponderado**")
-        colA, colB = st.columns(2)
-    
-        with colA:
-            st.metric("Score da Empresa", f"{score_empresa:.3f}")
-        with colB:
-            st.metric("Score da Concorrência", f"{score_concorrencia:.3f}")
 #################################################################################################################################################################################
 #################################################################################################################################################################################
 #################################################################################################################################################################################
