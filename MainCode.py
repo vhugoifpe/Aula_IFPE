@@ -479,8 +479,8 @@ def main():
             Capacidade=st.number_input("Capacidade (unid/ano)", value=1600,help="Selecione o nível de capacidade da sua empresa.")
             Eficiencia=st.number_input("Eficiência (%)", value=85,help="Selecione o nível de eficiência da sua empresa.")/100
             Penalidade=st.number_input("Custo de penalidade por unidade não atendida (R$/unid)", value=18,help="Selecione o custo de penlidade.")
-            preco_venda = st.number_input("Preço de venda por unidade (R$)", min_value=0.0, value=38, step=0.5, help="Preço que você vende cada unidade")
-            custo_variavel_base = st.number_input("Custo variável base por unidade (R$)", min_value=0.0, value=17, step=0.5, help="Custo variável atual por unidade produzida")
+            preco_venda = st.number_input("Preço de venda por unidade (R$)", min_value=0.0, value=38.0, step=0.5, help="Preço que você vende cada unidade")
+            custo_variavel_base = st.number_input("Custo variável base por unidade (R$)", min_value=0.0, value=17.0, step=0.5, help="Custo variável atual por unidade produzida")
             custo_fixo_mensal = st.number_input("Custo fixo mensal atual (R$/mês)", min_value=0.0, value=45000.0, step=10.0, help="Custos fixos mensais atuais")
             Anos = [2025, 2026, 2027, 2028]
             valores_padrao = [12000, 16000, 21000, 26000]
