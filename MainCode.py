@@ -476,14 +476,14 @@ def main():
     else:
         if choice == menu[1]:
             st.subheader("Indique o cenário atual da sua empresa:")
-            Capacidade=st.number_input("Capacidade (unid/mês)", value=100,help="Selecione o nível de capacidade da sua empresa.")
-            Eficiencia=st.number_input("Eficiência (%)", value=80,help="Selecione o nível de eficiência da sua empresa.")/100
-            Penalidade=st.number_input("Custo de penalidade por unidade não atendida (R$/unid)", value=7.5,help="Selecione o custo de penlidade.")
-            preco_venda = st.number_input("Preço de venda por unidade (R$)", min_value=0.0, value=25.0, step=0.5, help="Preço que você vende cada unidade")
-            custo_variavel_base = st.number_input("Custo variável base por unidade (R$)", min_value=0.0, value=8.0, step=0.5, help="Custo variável atual por unidade produzida")
-            custo_fixo_mensal = st.number_input("Custo fixo mensal atual (R$/mês)", min_value=0.0, value=20.0, step=10.0, help="Custos fixos mensais atuais")
+            Capacidade=st.number_input("Capacidade (unid/ano)", value=1600,help="Selecione o nível de capacidade da sua empresa.")
+            Eficiencia=st.number_input("Eficiência (%)", value=85,help="Selecione o nível de eficiência da sua empresa.")/100
+            Penalidade=st.number_input("Custo de penalidade por unidade não atendida (R$/unid)", value=18,help="Selecione o custo de penlidade.")
+            preco_venda = st.number_input("Preço de venda por unidade (R$)", min_value=0.0, value=38, step=0.5, help="Preço que você vende cada unidade")
+            custo_variavel_base = st.number_input("Custo variável base por unidade (R$)", min_value=0.0, value=17, step=0.5, help="Custo variável atual por unidade produzida")
+            custo_fixo_mensal = st.number_input("Custo fixo mensal atual (R$/mês)", min_value=0.0, value=45000.0, step=10.0, help="Custos fixos mensais atuais")
             Anos = [2025, 2026, 2027, 2028]
-            valores_padrao = [1200, 1400, 2000, 2000]
+            valores_padrao = [12000, 16000, 21000, 26000]
             Demandas = []
             for i, (col, ano, valor_padrao) in enumerate(zip(st.columns(4), Anos, valores_padrao)):
                 with col:
@@ -638,7 +638,7 @@ def main():
                                     
             st.header("📊 Resultados da Simulação")
             if st.button("Simular"):
-                st.write(str(Sim(Capacidade,Eficiencia,custo_variavel_base,custo_fixo_mensal,decisoes_anuais,preco_venda,Penalidade,Demandas)))
+                st.write("Lucro esperado no período:"+str(Sim(Capacidade,Eficiencia,custo_variavel_base,custo_fixo_mensal,decisoes_anuais,preco_venda,Penalidade,Demandas)))
 #################################################################################################################################################################################
 #################################################################################################################################################################################
 #################################################################################################################################################################################
