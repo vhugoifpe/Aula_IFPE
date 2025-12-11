@@ -1143,9 +1143,9 @@ def main():
                                 for aid in crit:
                                     act = acts_map[aid]
                                     curr = durations[aid]
-                                    min_possible = act["Duração Crash"]
+                                    min_possible = act["crash_duration"]
                                     max_reduc = max(0.0, curr - min_possible)
-                                    cost_increase = max(0.0, act["Custo Crash"] - act["Custo Normal"])
+                                    cost_increase = max(0.0, act["cost_crash"] - act["cost_normal"])
                                     # if no reducible, skip
                                     if max_reduc <= 1e-9 or cost_increase <= 0:
                                         continue
