@@ -1120,14 +1120,14 @@ def main():
                         st.subheader("💸 Crashing — Alocar budget para reduzir duração do projeto")
                         
                         if budget > 0:
-                            # Criar um mapa das atividades por ID
-                            acts_map = {act["Id"]: act for act in st.session_state.activities}
+                            # Criar um mapa das atividades por ID (usando "Atividade" como chave, não "Id")
+                            acts_map = {act["Atividade"]: act for act in st.session_state.activities}
                             
                             # prepare mutable durations copy
-                            durations = {act["Id"]: act["te"] for act in st.session_state.activities}
+                            durations = {act["Atividade"]: act["te"] for act in st.session_state.activities}
                             remaining_budget = float(budget)
-                            spend = {act["Id"]: 0.0 for act in st.session_state.activities}
-                            reduction = {act["Id"]: 0.0 for act in st.session_state.activities}
+                            spend = {act["Atividade"]: 0.0 for act in st.session_state.activities}
+                            reduction = {act["Atividade"]: 0.0 for act in st.session_state.activities}
                             
                             # loop until budget exhausted or no reducible on critical path
                             iter_count = 0
@@ -1160,7 +1160,7 @@ def main():
                                 slope, aid, max_reduc, cost_increase, curr, min_possible = candidates[0]
                                 
                                 # How much can we reduce given remaining budget?
-                                max_affordable_reduction = remaining_budget / slope if slope>0 else max_reduc
+                                max_affordable_reduction = remaining_budget / slope if slope > 0 else max_reduc
                                 reduce_by = min(max_reduc, max_affordable_reduction)
                                 
                                 if reduce_by <= 1e-9:
