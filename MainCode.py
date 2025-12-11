@@ -1121,13 +1121,13 @@ def main():
                         
                         if budget > 0:
                             # Criar um mapa das atividades por ID (usando "Atividade" como chave, não "Id")
-                            acts_map = {act["Atividade"]: act for act in st.session_state.activities}
+                            acts_map = {act["id"]: act for act in st.session_state.activities}
                             
                             # prepare mutable durations copy
-                            durations = {act["Atividade"]: act["te"] for act in st.session_state.activities}
+                            durations = {act["id"]: act["te"] for act in st.session_state.activities}
                             remaining_budget = float(budget)
-                            spend = {act["Atividade"]: 0.0 for act in st.session_state.activities}
-                            reduction = {act["Atividade"]: 0.0 for act in st.session_state.activities}
+                            spend = {act["id"]: 0.0 for act in st.session_state.activities}
+                            reduction = {act["id"]: 0.0 for act in st.session_state.activities}
                             
                             # loop until budget exhausted or no reducible on critical path
                             iter_count = 0
