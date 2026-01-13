@@ -1437,14 +1437,32 @@ def main():
                             st.write(df_input.describe())
                      else:
                          if choice == menu[5]:
-                            st.sidebar.header("⚙️ Política e Produção")
+                            st.sidebar.header("⚙️ Política de manutenção")
                             politica = st.sidebar.selectbox(
-                                "Política de manutenção",
+                                "Escolha a política",
                                 ["Corretiva", "Preventiva", "Preditiva"]
                             )
                             
+                            # Variáveis de decisão
+                            if politica == "Preventiva":
+                                intervalo_preventiva = st.sidebar.slider(
+                                    "Intervalo da preventiva (dias)",
+                                    10, 120, 30
+                                )
+                            
+                            if politica == "Preditiva":
+                                limite_saude = st.sidebar.slider(
+                                    "Limite de saúde para intervenção (%)",
+                                    20, 80, 40
+                                )
+                            
+                            # -----------------------------
+                            # Produção
+                            # -----------------------------
+                            st.sidebar.header("🏭 Produção")
+                            
                             nivel_producao = st.sidebar.slider(
-                                "Nível de produção diária (unidades)",
+                                "Produção diária (unidades)",
                                 50, 150, 100
                             )
                             
@@ -1453,8 +1471,9 @@ def main():
                                 90, 365, 180
                             )
                             
-                            iot = st.sidebar.checkbox("Monitoramento IoT (sensores)", value=True)
-                            
+                            # -----------------------------
+                            # Custos
+                            # -----------------------------
                             st.sidebar.header("💰 Custos (R$)")
                             
                             custo_falha = st.sidebar.number_input(
@@ -1462,14 +1481,9 @@ def main():
                                 1000, 20000, 8000, step=500
                             )
                             
-                            custo_preventiva = st.sidebar.number_input(
-                                "Custo da manutenção preventiva",
+                            custo_troca_preventiva = st.sidebar.number_input(
+                                "Custo da troca preventiva (planejada)",
                                 500, 10000, 2000, step=500
-                            )
-                            
-                            custo_preditiva = st.sidebar.number_input(
-                                "Custo da manutenção preditiva",
-                                500, 10000, 1500, step=500
                             )
                             
                             custo_sensor = st.sidebar.number_input(
@@ -1477,18 +1491,24 @@ def main():
                                 0, 20000, 3000, step=500
                             )
                             
+                            # -----------------------------
+                            # Downtime
+                            # -----------------------------
                             st.sidebar.header("⏱ Downtime (dias)")
                             
                             downtime_corretiva = st.sidebar.slider(
-                                "Downtime – corretiva",
+                                "Downtime corretiva",
                                 1, 10, 5
                             )
                             
                             downtime_preventiva = st.sidebar.slider(
-                                "Downtime – preventiva/preditiva",
+                                "Downtime preventiva/preditiva",
                                 1, 10, 2
                             )
                             
+                            # -----------------------------
+                            # Receita
+                            # -----------------------------
                             st.sidebar.header("📦 Receita")
                             
                             preco_venda = st.sidebar.number_input(
@@ -1504,10 +1524,9 @@ def main():
                             receita_total = 0.0
                             producao_total = 0.0
                             falhas = 0
-                            
                             parado_por = 0
-                            historico = []
                             
+                            historico = []
                             np.random.seed(42)
                             
                             # -----------------------------
@@ -1515,9 +1534,7 @@ def main():
                             # -----------------------------
                             for dia in range(dias):
                             
-                                # -------------------------
-                                # Máquina parada (downtime)
-                                # -------------------------
+                                # Máquina parada
                                 if parado_por > 0:
                                     producao = 0
                                     parado_por -= 1
@@ -1525,7 +1542,7 @@ def main():
                                     continue
                             
                                 # -------------------------
-                                # Degradação estocástica (Gamma)
+                                # Degradação Gamma dependente do estado e produção
                                 # -------------------------
                                 fator_estado = 1 - saude / 100
                                 shape = 1 + 4 * fator_estado
@@ -1539,6 +1556,7 @@ def main():
                                 # -------------------------
                                 parada = False
                             
+                                # Corretiva
                                 if politica == "Corretiva" and saude <= 0:
                                     falhas += 1
                                     custo_total += custo_falha
@@ -1546,14 +1564,16 @@ def main():
                                     parado_por = downtime_corretiva
                                     parada = True
                             
-                                if politica == "Preventiva" and dia % 30 == 0 and dia != 0:
-                                    custo_total += custo_preventiva
+                                # Preventiva
+                                if politica == "Preventiva" and dia % intervalo_preventiva == 0 and dia != 0:
+                                    custo_total += custo_troca_preventiva
                                     saude = 100
                                     parado_por = downtime_preventiva
                                     parada = True
                             
-                                if politica == "Preditiva" and saude < 40:
-                                    custo_total += custo_preditiva
+                                # Preditiva
+                                if politica == "Preditiva" and saude < limite_saude:
+                                    custo_total += custo_troca_preventiva
                                     saude = 100
                                     parado_por = downtime_preventiva
                                     parada = True
@@ -1588,12 +1608,13 @@ def main():
                                 ]
                             )
                             
-                            resultado = receita_total - (custo_total + (custo_sensor if iot else 0))
+                            custo_total_final = custo_total + (custo_sensor if politica == "Preditiva" else 0)
+                            resultado = receita_total - custo_total_final
                             
                             col1, col2, col3, col4 = st.columns(4)
                             col1.metric("🏭 Produção Total", f"{int(producao_total)} un.")
                             col2.metric("💰 Receita Total", f"R$ {receita_total:,.0f}")
-                            col3.metric("📉 Custo Total", f"R$ {(custo_total + (custo_sensor if iot else 0)):,.0f}")
+                            col3.metric("📉 Custo Total", f"R$ {custo_total_final:,.0f}")
                             col4.metric("📊 Resultado", f"R$ {resultado:,.0f}")
                             
                             # -----------------------------
@@ -1602,8 +1623,8 @@ def main():
                             st.subheader("📉 Saúde da máquina")
                             fig1, ax1 = plt.subplots()
                             ax1.plot(df["Dia"], df["Saúde da Máquina"])
-                            ax1.set_ylabel("Saúde (%)")
                             ax1.set_xlabel("Dia")
+                            ax1.set_ylabel("Saúde (%)")
                             st.pyplot(fig1)
                             
                             st.subheader("📈 Custos e receita acumulados")
