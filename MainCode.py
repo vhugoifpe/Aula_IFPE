@@ -1452,11 +1452,11 @@ def main():
                             dias = st.sidebar.slider("Horizonte de simulação (dias)", 90, 365, 180)
                             
                             # -----------------------------
-                            # Parâmetros
+                            # Parâmetros iniciais
                             # -----------------------------
-                            saude = 100
-                            custo_total = 0
-                            producao_total = 0
+                            saude = 100.0
+                            custo_total = 0.0
+                            producao_total = 0.0
                             falhas = 0
                             
                             custo_falha = 8000
@@ -1466,40 +1466,51 @@ def main():
                             
                             historico = []
                             
+                            np.random.seed(42)
+                            
                             # -----------------------------
                             # Simulação
                             # -----------------------------
                             for dia in range(dias):
-                                # Degradação da máquina
-                                degradacao = 0.05 * nivel_producao
+                            
+                                # -------------------------
+                                # Degradação estocástica (Gamma)
+                                # -------------------------
+                                fator_estado = 1 - saude / 100           # quanto mais velho, maior
+                                shape = 1 + 4 * fator_estado             # k
+                                scale = 0.02 * nivel_producao            # θ
+                            
+                                degradacao = np.random.gamma(shape, scale)
                                 saude -= degradacao
                             
                                 parada = False
                             
-                                # Política corretiva
+                                # -------------------------
+                                # Políticas de manutenção
+                                # -------------------------
                                 if politica == "Corretiva" and saude <= 0:
                                     falhas += 1
                                     custo_total += custo_falha
                                     saude = 100
                                     parada = True
                             
-                                # Política preventiva
                                 if politica == "Preventiva" and dia % 30 == 0 and dia != 0:
                                     custo_total += custo_preventiva
                                     saude = 100
                                     parada = True
                             
-                                # Política preditiva
                                 if politica == "Preditiva" and saude < 40:
                                     custo_total += custo_preditiva
                                     saude = 100
                                     parada = True
                             
+                                # -------------------------
                                 # Produção
+                                # -------------------------
                                 if parada:
                                     producao = 0
                                 else:
-                                    eficiencia = max(saude / 100, 0.5)
+                                    eficiencia = max(saude / 100, 0.4)
                                     producao = nivel_producao * eficiencia
                             
                                 producao_total += producao
@@ -1526,24 +1537,15 @@ def main():
                             fig1, ax1 = plt.subplots()
                             ax1.plot(df["Dia"], df["Saúde da Máquina"])
                             ax1.set_ylabel("Saúde (%)")
+                            ax1.set_xlabel("Dia")
                             st.pyplot(fig1)
                             
                             st.subheader("📈 Custo acumulado")
                             fig2, ax2 = plt.subplots()
                             ax2.plot(df["Dia"], df["Custo Acumulado"])
                             ax2.set_ylabel("R$")
+                            ax2.set_xlabel("Dia")
                             st.pyplot(fig2)
-                            
-                            # -----------------------------
-                            # Reflexão
-                            # -----------------------------
-                            st.markdown("### 🧠 Discussão")
-                            st.markdown("""
-                            - Qual política apresentou **menor custo total**?
-                            - Houve impacto significativo na **produção acumulada**?
-                            - O investimento em sensores se justifica?
-                            - Como essa decisão mudaria em uma planta real?
-                            """)
                          else:
                             st.header(menu[5])
                             st.write("<h6 style='text-align: justify; color: Blue Jay;'>Estes aplicativos são referente à aula do dia 14/01/2026.</h6>", unsafe_allow_html=True)
