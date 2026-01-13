@@ -1611,26 +1611,36 @@ def main():
                             custo_total_final = custo_total + (custo_sensor if politica == "Preditiva" else 0)
                             resultado = receita_total - custo_total_final
 
-                            st.markdown("""
-                            <style>
-                            .small-metric [data-testid="stMetricValue"] {
-                                font-size: 14px;
-                            }
-                            .small-metric [data-testid="stMetricLabel"] {
-                                font-size: 10px;
-                            }
-                            </style>
-                            """, unsafe_allow_html=True)
-                            with st.container():
-                                st.markdown('<div class="small-metric">', unsafe_allow_html=True)
+                            col1, col2, col3, col4 = st.columns(4)
+
+                            col1.markdown("""
+                            <div style="font-size:12px;">
+                            <b>🏭 Produção Total</b><br>
+                            <span style="font-size:18px;">{}</span>
+                            </div>
+                            """.format(int(producao_total)), unsafe_allow_html=True)
                             
-                                col1, col2, col3, col4 = st.columns(4)
-                                col1.metric("🏭 Produção Total", f"{int(producao_total)}")
-                                col2.metric("💰 Receita Total", f"R$ {receita_total:,.0f}")
-                                col3.metric("📉 Custo Total", f"R$ {custo_total_final:,.0f}")
-                                col4.metric("📊 Resultado", f"R$ {resultado:,.0f}")
+                            col2.markdown("""
+                            <div style="font-size:12px;">
+                            <b>💰 Receita Total</b><br>
+                            <span style="font-size:18px;">R$ {:,.0f}</span>
+                            </div>
+                            """.format(receita_total), unsafe_allow_html=True)
                             
-                                st.markdown('</div>', unsafe_allow_html=True)
+                            col3.markdown("""
+                            <div style="font-size:12px;">
+                            <b>📉 Custo Total</b><br>
+                            <span style="font-size:18px;">R$ {:,.0f}</span>
+                            </div>
+                            """.format(custo_total_final), unsafe_allow_html=True)
+                            
+                            col4.markdown("""
+                            <div style="font-size:12px;">
+                            <b>📊 Resultado</b><br>
+                            <span style="font-size:18px;">R$ {:,.0f}</span>
+                            </div>
+                            """.format(resultado), unsafe_allow_html=True)
+
 
                             
                             # -----------------------------
