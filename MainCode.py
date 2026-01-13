@@ -18,7 +18,7 @@ def main():
     #inserindo na coluna 2
     col2.image(foto, use_column_width=True)
     #O código abaixo centraliza e atribui cor
-    st.markdown("<h2 style='text-align: center; color: #306754;'>Aplicativo referente à aula do dia 13/12/2025.</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #306754;'>Web-app referente à aula do dia 14/01/2026.</h2>", unsafe_allow_html=True)
     
     st.markdown("""
         <div style="background-color: #F3F3F3; padding: 10px; text-align: center;">
@@ -26,7 +26,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-    menu = ["Estratégia de Operações","Planejamento de Capacidade","Previsão de Demanda","Gestão de Projetos","Gestão da Qualidade", "Informações"]
+    menu = ["Estratégia de Operações","Planejamento de Capacidade","Previsão de Demanda","Gestão de Projetos","Gestão da Qualidade", "Indústria 4.0 e Inovações", "Informações"]
     
     choice = st.sidebar.selectbox("Select here", menu)
 
@@ -1436,17 +1436,125 @@ def main():
                             st.subheader("📋 Estatísticas")
                             st.write(df_input.describe())
 
-                        
                      else:
-                        st.header(menu[5])
-                        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Estes aplicativos são referente à aula do dia 13/12/2025.</h6>", unsafe_allow_html=True)
-                        st.write("<h6 style='text-align: justify; color: Blue Jay;'>Para mais informações, dúvidas e sugestões, por favor contacte nos e-mails abaixo:</h6>", unsafe_allow_html=True)
-                        
-                        st.write('''
-                                    victor.lima@ifpe.edu.br
-                                    
-                                    vhugoreslim@gmail.com
-                                    ''' .format(chr(948), chr(948), chr(948), chr(948), chr(948)))       
+                         if choice == menu[4]:
+                            st.sidebar.header("⚙️ Configurações")
+                            politica = st.sidebar.selectbox(
+                                "Política de manutenção",
+                                ["Corretiva", "Preventiva", "Preditiva"]
+                            )
+                            
+                            nivel_producao = st.sidebar.slider(
+                                "Nível de produção diária",
+                                50, 150, 100
+                            )
+                            
+                            iot = st.sidebar.checkbox("Monitoramento IoT (sensores)", value=True)
+                            dias = st.sidebar.slider("Horizonte de simulação (dias)", 90, 365, 180)
+                            
+                            # -----------------------------
+                            # Parâmetros
+                            # -----------------------------
+                            saude = 100
+                            custo_total = 0
+                            producao_total = 0
+                            falhas = 0
+                            
+                            custo_falha = 8000
+                            custo_preventiva = 2000
+                            custo_preditiva = 1500
+                            custo_sensor = 3000 if iot else 0
+                            
+                            historico = []
+                            
+                            # -----------------------------
+                            # Simulação
+                            # -----------------------------
+                            for dia in range(dias):
+                                # Degradação da máquina
+                                degradacao = 0.05 * nivel_producao
+                                saude -= degradacao
+                            
+                                parada = False
+                            
+                                # Política corretiva
+                                if politica == "Corretiva" and saude <= 0:
+                                    falhas += 1
+                                    custo_total += custo_falha
+                                    saude = 100
+                                    parada = True
+                            
+                                # Política preventiva
+                                if politica == "Preventiva" and dia % 30 == 0 and dia != 0:
+                                    custo_total += custo_preventiva
+                                    saude = 100
+                                    parada = True
+                            
+                                # Política preditiva
+                                if politica == "Preditiva" and saude < 40:
+                                    custo_total += custo_preditiva
+                                    saude = 100
+                                    parada = True
+                            
+                                # Produção
+                                if parada:
+                                    producao = 0
+                                else:
+                                    eficiencia = max(saude / 100, 0.5)
+                                    producao = nivel_producao * eficiencia
+                            
+                                producao_total += producao
+                            
+                                historico.append([dia, saude, producao, custo_total])
+                            
+                            # -----------------------------
+                            # Resultados
+                            # -----------------------------
+                            df = pd.DataFrame(
+                                historico,
+                                columns=["Dia", "Saúde da Máquina", "Produção Diária", "Custo Acumulado"]
+                            )
+                            
+                            col1, col2, col3 = st.columns(3)
+                            col1.metric("🏭 Produção Total", f"{int(producao_total)} unidades")
+                            col2.metric("💰 Custo Total", f"R$ {custo_total + custo_sensor:,.0f}")
+                            col3.metric("⚠️ Falhas", falhas)
+                            
+                            # -----------------------------
+                            # Gráficos
+                            # -----------------------------
+                            st.subheader("📉 Saúde da máquina ao longo do tempo")
+                            fig1, ax1 = plt.subplots()
+                            ax1.plot(df["Dia"], df["Saúde da Máquina"])
+                            ax1.set_ylabel("Saúde (%)")
+                            st.pyplot(fig1)
+                            
+                            st.subheader("📈 Custo acumulado")
+                            fig2, ax2 = plt.subplots()
+                            ax2.plot(df["Dia"], df["Custo Acumulado"])
+                            ax2.set_ylabel("R$")
+                            st.pyplot(fig2)
+                            
+                            # -----------------------------
+                            # Reflexão
+                            # -----------------------------
+                            st.markdown("### 🧠 Discussão")
+                            st.markdown("""
+                            - Qual política apresentou **menor custo total**?
+                            - Houve impacto significativo na **produção acumulada**?
+                            - O investimento em sensores se justifica?
+                            - Como essa decisão mudaria em uma planta real?
+                            """)
+                         else:
+                            st.header(menu[5])
+                            st.write("<h6 style='text-align: justify; color: Blue Jay;'>Estes aplicativos são referente à aula do dia 14/01/2026.</h6>", unsafe_allow_html=True)
+                            st.write("<h6 style='text-align: justify; color: Blue Jay;'>Para mais informações, dúvidas e sugestões, por favor contacte nos e-mails abaixo:</h6>", unsafe_allow_html=True)
+                            
+                            st.write('''
+                                        victor.lima@ifpe.edu.br
+                                        
+                                        vhugoreslim@gmail.com
+                                        ''' .format(chr(948), chr(948), chr(948), chr(948), chr(948)))       
 if st._is_running_with_streamlit:
     main()
 else:
