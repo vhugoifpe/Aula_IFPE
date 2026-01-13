@@ -1614,10 +1614,10 @@ def main():
                             st.markdown("""
                             <style>
                             .small-metric [data-testid="stMetricValue"] {
-                                font-size: 16px;
+                                font-size: 14px;
                             }
                             .small-metric [data-testid="stMetricLabel"] {
-                                font-size: 12px;
+                                font-size: 10px;
                             }
                             </style>
                             """, unsafe_allow_html=True)
