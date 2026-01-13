@@ -1611,11 +1611,17 @@ def main():
                             custo_total_final = custo_total + (custo_sensor if politica == "Preditiva" else 0)
                             resultado = receita_total - custo_total_final
                             
-                            col1, col2, col3, col4 = st.columns(4)
-                            col1.metric("🏭 Produção Total", f"{int(producao_total)} un.")
-                            col2.metric("💰 Receita Total", f"R$ {receita_total:,.0f}")
-                            col3.metric("📉 Custo Total", f"R$ {custo_total_final:,.0f}")
-                            col4.metric("📊 Resultado", f"R$ {resultado:,.0f}")
+                            with st.container():
+                                st.markdown('<div class="small-metric">', unsafe_allow_html=True)
+                            
+                                col1, col2, col3, col4 = st.columns(4)
+                                col1.metric("🏭 Produção Total", f"{int(producao_total)}")
+                                col2.metric("💰 Receita Total", f"R$ {receita_total:,.0f}")
+                                col3.metric("📉 Custo Total", f"R$ {custo_total_final:,.0f}")
+                                col4.metric("📊 Resultado", f"R$ {resultado:,.0f}")
+                            
+                                st.markdown('</div>', unsafe_allow_html=True)
+
                             
                             # -----------------------------
                             # Gráficos
