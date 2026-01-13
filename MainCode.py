@@ -1611,7 +1611,7 @@ def main():
                             custo_total_final = custo_total + (custo_sensor if politica == "Preditiva" else 0)
                             resultado = receita_total - custo_total_final
 
-                             st.markdown("""
+                            st.markdown("""
                             <style>
                             .small-metric [data-testid="stMetricValue"] {
                                 font-size: 16px;
