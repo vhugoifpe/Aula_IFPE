@@ -1435,9 +1435,8 @@ def main():
                         
                             st.subheader("📋 Estatísticas")
                             st.write(df_input.describe())
-
                      else:
-                         if choice == menu[4]:
+                         if choice == menu[5]:
                             st.sidebar.header("⚙️ Configurações")
                             politica = st.sidebar.selectbox(
                                 "Política de manutenção",
